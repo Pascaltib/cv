@@ -49,7 +49,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  base: '/',
+  base: '/cv/',
   build: {
     target: 'esnext',
     outDir: 'dist',
