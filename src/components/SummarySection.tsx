@@ -39,7 +39,7 @@ export function SummarySection() {
             What I love most about programming is the ability to create a product from scratch using my own hands (or fingers).
           </p>
           <p className="text-gray-600 mt-6 italic">
-            🌍 I grew up in Colombia, the USA, India, The Netherlands, and Austria and I am currently living in Spain.
+            🌍 I grew up and lived in Colombia, USA, India, The Netherlands, and Austria. I am currently living in Spain.
           </p>
         </div>
       </div>
