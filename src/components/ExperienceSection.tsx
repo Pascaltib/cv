@@ -1,4 +1,5 @@
 import { Calendar, MapPin, Building, ExternalLink } from 'lucide-react';
+import { LiquidGlassCard } from './LiquidGlassCard';
 
 interface Experience {
   title: string;
@@ -95,7 +96,7 @@ const experiences: Experience[] = [
 
 export function ExperienceSection() {
   return (
-    <div className="py-16 px-8 md:px-16 bg-gray-50">
+    <div className="py-16 px-8 md:px-16 relative">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -103,11 +104,11 @@ export function ExperienceSection() {
           </h2>
           <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full"></div>
         </div>
-        
+
         <div className="relative">
           {/* Timeline line */}
           <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500 hidden md:block"></div>
-          
+
           <div className="space-y-8">
             {experiences.map((exp, index) => (
               <ExperienceCard key={index} experience={exp} />
@@ -123,65 +124,74 @@ function ExperienceCard({ experience }: { experience: Experience }) {
   return (
     <div className="relative md:ml-16">
       {/* Timeline dot */}
-      <div className="absolute -left-20 top-6 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-4 border-white shadow-lg hidden md:block"></div>
-      
-      <div className="group bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
-          <div className="mb-4 md:mb-0">
-            <h3 className="text-xl text-gray-900 mb-1">{experience.title}</h3>
-            <div className="flex items-center gap-2 text-blue-600 mb-2">
-              <Building className="w-4 h-4" />
-              {experience.website ? (
-                <a 
-                  href={experience.website} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-blue-800 transition-colors flex items-center gap-1 group"
-                >
+      {/* <div className="absolute -left-20 top-6 w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full border-2 border-border ring-2 ring-blue-600/30 shadow-lg hidden md:block"></div> */}
+
+      <LiquidGlassCard
+        glowIntensity="sm"
+        shadowIntensity="sm"
+        borderRadius="12px"
+        blurIntensity="sm"
+        draggable={true}
+        className="group p-6"
+      >
+        <div className="relative z-30">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+            <div className="mb-4 md:mb-0">
+              <h3 className="text-xl text-white mb-1">{experience.title}</h3>
+              <div className="flex items-center gap-2 text-blue-300 mb-2">
+                <Building className="w-4 h-4" />
+                {experience.website ? (
+                  <a
+                    href={experience.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-blue-100 transition-colors flex items-center gap-1 group"
+                  >
+                    <span>{experience.company}</span>
+                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                ) : (
                   <span>{experience.company}</span>
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </a>
-              ) : (
-                <span>{experience.company}</span>
-              )}
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col items-start md:items-end gap-2">
+              <div className="flex items-center gap-2 text-white/80">
+                <Calendar className="w-4 h-4" />
+                <span className="text-sm">{experience.period}</span>
+              </div>
+              <div className="flex items-center gap-2 text-white/80">
+                <MapPin className="w-4 h-4" />
+                <span className="text-sm">{experience.location}</span>
+              </div>
             </div>
           </div>
-          
-          <div className="flex flex-col items-start md:items-end gap-2">
-            <div className="flex items-center gap-2 text-gray-600">
-              <Calendar className="w-4 h-4" />
-              <span className="text-sm">{experience.period}</span>
+
+          {experience.description.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {experience.description.map((desc, index) => (
+                <p key={index} className="text-white/90 leading-relaxed">
+                  • {desc}
+                </p>
+              ))}
             </div>
-            <div className="flex items-center gap-2 text-gray-600">
-              <MapPin className="w-4 h-4" />
-              <span className="text-sm">{experience.location}</span>
+          )}
+
+          {experience.technologies && (
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/20">
+              {experience.technologies.map((tech, index) => (
+                <span
+                  key={index}
+                  className="px-3 py-1 bg-white/20 text-white rounded-full text-sm border border-white/30"
+                >
+                  {tech}
+                </span>
+              ))}
             </div>
-          </div>
+          )}
         </div>
-        
-        {experience.description.length > 0 && (
-          <div className="space-y-2 mb-4">
-            {experience.description.map((desc, index) => (
-              <p key={index} className="text-gray-700 leading-relaxed">
-                • {desc}
-              </p>
-            ))}
-          </div>
-        )}
-        
-        {experience.technologies && (
-          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
-            {experience.technologies.map((tech, index) => (
-              <span 
-                key={index}
-                className="px-3 py-1 bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 rounded-full text-sm border border-blue-200"
-              >
-                {tech}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      </LiquidGlassCard>
     </div>
   );
 }

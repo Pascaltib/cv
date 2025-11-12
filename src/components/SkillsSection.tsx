@@ -1,4 +1,5 @@
-import { Code, Database, Cloud, Brain, Smartphone, Users } from 'lucide-react';
+import { Code, Database, Brain, Users } from 'lucide-react';
+import { LiquidGlassCard } from './LiquidGlassCard';
 
 interface SkillCategory {
   title: string;
@@ -47,39 +48,75 @@ export function SkillsSection() {
             A comprehensive toolkit spanning modern web technologies, AI integration, and leadership
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {skillCategories.map((category, index) => (
             <SkillCard key={index} category={category} />
           ))}
         </div>
-        
+
         {/* Education Section */}
         <div className="mt-16">
           <h3 className="text-2xl mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Education
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
-              <h4 className="text-lg mb-2 text-gray-900">Full Stack Web Developer, Computer Programming</h4>
-              <p className="text-blue-600 mb-1">Le Wagon</p>
-              <p className="text-gray-600 text-sm">2021</p>
-            </div>
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
-              <h4 className="text-lg mb-2 text-gray-900">Business Major</h4>
-              <p className="text-blue-600 mb-1">Erasmus University College</p>
-              <p className="text-gray-600 text-sm">Rotterdam, Netherlands • 2020</p>
-            </div>
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
-              <h4 className="text-lg mb-2 text-gray-900">International Baccalaureate diploma and High School diploma</h4>
-              <p className="text-blue-600 mb-1">American Embassy School, New Delhi</p>
-              <p className="text-gray-600 text-sm">2017</p>
-            </div>
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
-              <h4 className="text-lg mb-2 text-gray-900">Global Entrepreneurship & Innovation Course</h4>
-              <p className="text-blue-600 mb-1">Columbia University</p>
-              <p className="text-gray-600 text-sm">Business/Commerce, General • June 2016</p>
-            </div>
+            <LiquidGlassCard
+              glowIntensity="sm"
+              shadowIntensity="sm"
+              borderRadius="12px"
+              blurIntensity="sm"
+              draggable={true}
+              className="p-6"
+            >
+              <div className="relative z-30">
+                <h4 className="text-lg mb-2 text-white">Full Stack Web Developer, Computer Programming</h4>
+                <p className="text-blue-300 mb-1">Le Wagon</p>
+                <p className="text-white/70 text-sm">2021</p>
+              </div>
+            </LiquidGlassCard>
+            <LiquidGlassCard
+              glowIntensity="sm"
+              shadowIntensity="sm"
+              borderRadius="12px"
+              blurIntensity="sm"
+              draggable={true}
+              className="p-6"
+            >
+              <div className="relative z-30">
+                <h4 className="text-lg mb-2 text-white">Business Major</h4>
+                <p className="text-blue-300 mb-1">Erasmus University College</p>
+                <p className="text-white/70 text-sm">Rotterdam, Netherlands • 2020</p>
+              </div>
+            </LiquidGlassCard>
+            <LiquidGlassCard
+              glowIntensity="sm"
+              shadowIntensity="sm"
+              borderRadius="12px"
+              blurIntensity="sm"
+              draggable={true}
+              className="p-6"
+            >
+              <div className="relative z-30">
+                <h4 className="text-lg mb-2 text-white">International Baccalaureate diploma and High School diploma</h4>
+                <p className="text-blue-300 mb-1">American Embassy School, New Delhi</p>
+                <p className="text-white/70 text-sm">2017</p>
+              </div>
+            </LiquidGlassCard>
+            <LiquidGlassCard
+              glowIntensity="sm"
+              shadowIntensity="sm"
+              borderRadius="12px"
+              blurIntensity="sm"
+              draggable={true}
+              className="p-6"
+            >
+              <div className="relative z-30">
+                <h4 className="text-lg mb-2 text-white">Global Entrepreneurship & Innovation Course</h4>
+                <p className="text-blue-300 mb-1">Columbia University</p>
+                <p className="text-white/70 text-sm">Business/Commerce, General • June 2016</p>
+              </div>
+            </LiquidGlassCard>
           </div>
         </div>
       </div>
@@ -89,22 +126,31 @@ export function SkillsSection() {
 
 function SkillCard({ category }: { category: SkillCategory }) {
   return (
-    <div className="group bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-      <div className="mb-4">
-        <div className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${category.color} text-white mb-3 group-hover:scale-110 transition-transform`}>
-          {category.icon}
-        </div>
-        <h3 className="text-lg text-gray-900 mb-3">{category.title}</h3>
-      </div>
-      
-      <div className="space-y-2">
-        {category.skills.map((skill, index) => (
-          <div key={index} className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${category.color}`}></div>
-            <span className="text-gray-700">{skill}</span>
+    <LiquidGlassCard
+      glowIntensity="sm"
+      shadowIntensity="sm"
+      borderRadius="12px"
+      blurIntensity="sm"
+      draggable={true}
+      className="group p-6"
+    >
+      <div className="relative z-30">
+        <div className="mb-4">
+          <div className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${category.color} text-white mb-3 group-hover:scale-110 transition-transform`}>
+            {category.icon}
           </div>
-        ))}
+          <h3 className="text-lg text-white mb-3">{category.title}</h3>
+        </div>
+
+        <div className="space-y-2">
+          {category.skills.map((skill, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${category.color}`}></div>
+              <span className="text-white/90">{skill}</span>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </LiquidGlassCard>
   );
 }
