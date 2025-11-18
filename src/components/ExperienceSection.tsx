@@ -13,9 +13,22 @@ interface Experience {
 
 const experiences: Experience[] = [
   {
+    title: "Software Engineer & Product Manager",
+    company: "KnowThyself360°",
+    location: "United States · Remote",
+    period: "January 2024 - Present",
+    description: [
+      "Founder and developer for tech startup based in the US.",
+      "Responsible for product management and technical development of app.",
+      "Tech stack: Svelte, Sveltekit, Shadcn, TypeScript, Prisma ORM, Tailwind, AI SDK integrating several AI models"
+    ],
+    technologies: ["Svelte", "SvelteKit", "TypeScript", "Prisma ORM", "Tailwind CSS", "OpenAI API"],
+    website: "https://knowthyself360.ai"
+  },
+  {
     title: "Lead Developer",
     company: "Navar",
-    location: "Hamburg, Germany",
+    location: "Hamburg, Germany · Remote",
     period: "July 2023 - Present",
     description: [
       "I'm the Lead Developer at Navar, where we're deploying AI to redefine business transformation. Our tool is a catalyst for change, aiding in market adaptation, tech modernization, and efficiency gains. My role is twofold: leveraging LLMS to automate transformational consulting for B2B clients and ensuring a topnotch user experience and product.",
@@ -28,19 +41,6 @@ const experiences: Experience[] = [
     ],
     technologies: ["TypeScript", "SvelteKit", "Svelte", "Prisma ORM", "Tailwind", "Vercel AI SDK", "OpenAI GPT", "Google Gemini", "Anthropic Claude", "Azure OpenAI", "Pinecone", "RAG"],
     website: "https://navar.ai"
-  },
-  {
-    title: "Software Engineer & Product Manager",
-    company: "KnowThyself360°",
-    location: "United States · Remote",
-    period: "January 2024 - Present",
-    description: [
-      "Founder and developer for small tech startup based in the US.",
-      "Responsible for product management and technical development of app.",
-      "Tech stack: Svelte, Sveltekit, Shadcn, TypeScript, Sveltekit, Svelte, Prisma ORM, Tailwind, integrated with OpenAI API."
-    ],
-    technologies: ["Svelte", "SvelteKit", "TypeScript", "Prisma ORM", "Tailwind CSS", "OpenAI API"],
-    website: "https://knowthyself360.ai"
   },
   {
     title: "Chief Technology Officer and Full Stack Web Developer",
