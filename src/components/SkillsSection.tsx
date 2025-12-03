@@ -40,10 +40,10 @@ export function SkillsSection() {
     <div className="py-16 px-8 md:px-16 bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-4xl mb-4 text-white">
             Skills
           </h2>
-          <div className="w-16 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto rounded-full"></div>
+          <div className="w-16 h-1 bg-white mx-auto rounded-full"></div>
           <p className="text-gray-600 mt-6 max-w-2xl mx-auto">
             A comprehensive toolkit spanning modern web technologies, AI integration, and leadership
           </p>
@@ -57,7 +57,7 @@ export function SkillsSection() {
 
         {/* Education Section */}
         <div className="mt-16">
-          <h3 className="text-2xl mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h3 className="text-2xl mb-8 text-center text-white">
             Education
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

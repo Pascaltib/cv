@@ -1,23 +1,39 @@
 import React from 'react';
-import { Mail, Phone, Linkedin, Github } from 'lucide-react';
+import { Mail, Phone, Linkedin, Github, ChevronDown } from 'lucide-react';
 import { EyeTrackingPortrait } from './EyeTrackingPortrait';
 import { LiquidGlassCard } from './LiquidGlassCard';
 import { Sparkles } from './Sparkles';
+import { LineShadowText } from './LineShadowText';
+import { HyperText } from './HyperText';
 
 export function CVHeader() {
+  const scrollToNextSection = () => {
+    const headerHeight = window.innerHeight;
+    window.scrollTo({
+      top: headerHeight,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <div className="relative overflow-hidden">
-      <div className="relative z-10 px-8 pt-20 pb-8 md:px-16 md:pt-24">
-        <div className="max-w-5xl mx-auto flex justify-between items-start gap-12">
-          <div className="flex-1">
+      <div className="relative z-10 px-8 md:px-16 flex flex-col gap-12 h-dvh">
+        <div className="max-w-5xl mx-auto flex flex-col justify-center items-center grow">
+          <div className="">
             <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-6xl text-foreground mb-6 tracking-tight">
-                Pascal Tiberghien
+
+
+              <h1 className="text-4xl md:text-7xl leading-none font-semibold tracking-tighter text-balance">
+                <LineShadowText className="italic" shadowColor={"white"}>
+                  Pascal
+                </LineShadowText>
+                {" "}
+                <LineShadowText className="italic" shadowColor={"white"}>
+                  Tiberghien
+                </LineShadowText>
               </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground mb-8">
-                Full Stack Developer
-              </p>
-              <div className="w-24 h-1 bg-linear-to-r from-primary to-secondary mx-auto rounded-full"></div>
+
+              {/* <div className="w-24 h-1 bg-linear-to-r from-primary to-secondary mx-auto rounded-full"></div> */}
             </div>
 
             {/* Eye-tracking portrait */}
@@ -29,45 +45,42 @@ export function CVHeader() {
                 className="transition-transform duration-300 hover:scale-105"
               />
             </div>
+            <HyperText className='mt-4'>Full Stack Developer</HyperText>
           </div>
 
-          <div className="flex flex-col gap-6 w-fit min-w-[280px]">
+          <div className="flex gap-4 w-fit mt-4">
             <ContactItem
               icon={<Mail className="w-5 h-5" />}
               label="Email"
-              value="pascaltib@gmail.com"
               href="mailto:pascaltib@gmail.com"
             />
-            <ContactItem
+            {/* <ContactItem
               icon={<Phone className="w-5 h-5" />}
               label="Phone"
-              value="+34 645587412"
               href="tel:+34645587412"
-            />
+            /> */}
             <ContactItem
               icon={<Linkedin className="w-5 h-5" />}
               label="LinkedIn"
-              value="pascaltib"
               href="https://linkedin.com/in/pascaltib"
             />
             <ContactItem
               icon={<Github className="w-5 h-5" />}
               label="GitHub"
-              value="Pascaltib"
               href="https://github.com/Pascaltib"
             />
           </div>
         </div>
 
-        <div className='relative h-56 w-full overflow-hidden mt-12 flex flex-col items-center'>
+        <div className='relative h-56 w-full overflow-hidden flex flex-col items-center'>
           <div className='absolute inset-x-0 top-0 flex justify-center'>
-            <div className='bg-linear-to-r from-transparent via-gray-500 to-transparent h-[2px] w-1/2 blur-xs' />
+            <div className='bg-linear-to-r from-transparent via-yellow-200 to-transparent h-[2px] w-1/2 blur-xs' />
           </div>
           <div className='absolute inset-x-0 top-0 flex justify-center'>
-            <div className='bg-linear-to-r from-transparent via-gray-400 to-transparent h-px w-1/2' />
+            <div className='bg-linear-to-r from-transparent via-yellow-100 to-transparent h-px w-1/2' />
           </div>
           <div className='absolute inset-x-0 top-0 flex justify-center'>
-            <div className='bg-linear-to-r from-transparent via-gray-50 to-transparent h-px w-1/4' />
+            <div className='bg-linear-to-r from-transparent via-yellow-50 to-transparent h-px w-1/4' />
           </div>
 
           <Sparkles
@@ -76,38 +89,46 @@ export function CVHeader() {
             className='absolute inset-x-0 -mt-24 top-0 h-full w-full mask-[radial-gradient(50%_50%,white,transparent_55%)]'
           />
 
-          {/* Intentionally no scroll indicator */}
+          {/* Scroll indicator */}
+          <button
+            onClick={scrollToNextSection}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 group cursor-pointer"
+            aria-label="Scroll to next section"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-6 h-10 border-2 border-foreground/30 rounded-full flex items-start justify-center p-1.5 group-hover:border-foreground/50 transition-colors">
+                <div className="w-1 h-2 bg-foreground/50 rounded-full animate-scroll-down group-hover:bg-foreground/70" />
+              </div>
+              <ChevronDown className="w-5 h-5 text-foreground/30 group-hover:text-foreground/50 transition-all animate-bounce-subtle" />
+            </div>
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-function ContactItem({ icon, label, value, href }: {
+function ContactItem({ icon, label, href }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
   href: string;
 }) {
   return (
     <LiquidGlassCard
       draggable={true}
-      blurIntensity="lg"
-      shadowIntensity="sm"
-      glowIntensity="xs"
+      blurIntensity="sm"
+      shadowIntensity="md"
+      glowIntensity="sm"
       borderRadius="12px"
-      className="border border-border transition-all duration-300"
+      className=""
     >
       <a
         href={href}
-        className="group flex items-center gap-3 p-4 relative z-30"
+        title={label}
+        className="group flex items-center justify-center p-3 relative z-30"
       >
         <div className="text-primary/80 group-hover:text-primary transition-colors">
           {icon}
-        </div>
-        <div>
-          <p className="text-muted-foreground text-sm">{label}</p>
-          <p className="text-foreground truncate">{value}</p>
         </div>
       </a>
     </LiquidGlassCard>
