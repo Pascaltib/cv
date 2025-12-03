@@ -1,5 +1,5 @@
-import React from 'react';
-import { Mail, Phone, Linkedin, Github, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, Linkedin, Github, ChevronDown } from 'lucide-react';
 import { EyeTrackingPortrait } from './EyeTrackingPortrait';
 import { LiquidGlassCard } from './LiquidGlassCard';
 import { Sparkles } from './Sparkles';
@@ -7,12 +7,52 @@ import { LineShadowText } from './LineShadowText';
 import { HyperText } from './HyperText';
 
 export function CVHeader() {
+  const [showScrollButton, setShowScrollButton] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const headerHeight = window.innerHeight;
+      const scrollPosition = window.scrollY;
+      // Hide button when scrolled past the header section
+      setShowScrollButton(scrollPosition < headerHeight * 0.8);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial position
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const scrollToNextSection = () => {
-    const headerHeight = window.innerHeight;
-    window.scrollTo({
-      top: headerHeight,
-      behavior: 'smooth'
-    });
+    const startPosition = window.scrollY;
+    const targetPosition = window.innerHeight;
+    const distance = targetPosition - startPosition;
+    const duration = 1200; // milliseconds
+    let startTime: number | null = null;
+
+    // Easing function: ease-in-out-cubic with emphasis on easing at the beginning
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5
+        ? 4 * t * t * t // Ease in (slower at start)
+        : 1 - Math.pow(-2 * t + 2, 3) / 2; // Ease out
+    };
+
+    const animateScroll = (currentTime: number) => {
+      if (startTime === null) startTime = currentTime;
+      const timeElapsed = currentTime - startTime;
+      const progress = Math.min(timeElapsed / duration, 1);
+
+      // Apply easing
+      const easedProgress = easeInOutCubic(progress);
+
+      window.scrollTo(0, startPosition + distance * easedProgress);
+
+      if (progress < 1) {
+        requestAnimationFrame(animateScroll);
+      }
+    };
+
+    requestAnimationFrame(animateScroll);
   };
 
   return (
@@ -90,18 +130,20 @@ export function CVHeader() {
           />
 
           {/* Scroll indicator */}
-          <button
-            onClick={scrollToNextSection}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 group cursor-pointer"
-            aria-label="Scroll to next section"
-          >
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-6 h-10 border-2 border-foreground/30 rounded-full flex items-start justify-center p-1.5 group-hover:border-foreground/50 transition-colors">
-                <div className="w-1 h-2 bg-foreground/50 rounded-full animate-scroll-down group-hover:bg-foreground/70" />
+          {showScrollButton && (
+            <button
+              onClick={scrollToNextSection}
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 group cursor-pointer transition-opacity duration-500"
+              aria-label="Scroll to next section"
+            >
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-6 h-10 border-2 border-foreground/30 rounded-full flex items-start justify-center p-1.5 group-hover:border-foreground/50 transition-colors">
+                  <div className="w-1 h-2 bg-foreground/50 rounded-full animate-scroll-down group-hover:bg-foreground/70" />
+                </div>
+                <ChevronDown className="w-5 h-5 text-foreground/30 group-hover:text-foreground/50 transition-all animate-bounce-subtle" />
               </div>
-              <ChevronDown className="w-5 h-5 text-foreground/30 group-hover:text-foreground/50 transition-all animate-bounce-subtle" />
-            </div>
-          </button>
+            </button>
+          )}
         </div>
       </div>
     </div>

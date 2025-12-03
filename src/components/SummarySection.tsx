@@ -1,14 +1,55 @@
+import { useState, useEffect } from 'react';
 import { Brain, Code, Lightbulb, ChevronDown } from 'lucide-react';
 import { LiquidGlassCard } from './LiquidGlassCard';
 import { Sparkles } from './Sparkles';
 
 export function SummarySection() {
+  const [showScrollButton, setShowScrollButton] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const summaryHeight = window.innerHeight * 2;
+      const scrollPosition = window.scrollY;
+      // Hide button when scrolled past the summary section
+      setShowScrollButton(scrollPosition < summaryHeight * 0.8);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial position
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const scrollToNextSection = () => {
-    const summaryHeight = window.innerHeight * 2;
-    window.scrollTo({
-      top: summaryHeight,
-      behavior: 'smooth'
-    });
+    const startPosition = window.scrollY;
+    const targetPosition = window.innerHeight * 2;
+    const distance = targetPosition - startPosition;
+    const duration = 1200; // milliseconds
+    let startTime: number | null = null;
+
+    // Easing function: ease-in-out-cubic with emphasis on easing at the beginning
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5
+        ? 4 * t * t * t // Ease in (slower at start)
+        : 1 - Math.pow(-2 * t + 2, 3) / 2; // Ease out
+    };
+
+    const animateScroll = (currentTime: number) => {
+      if (startTime === null) startTime = currentTime;
+      const timeElapsed = currentTime - startTime;
+      const progress = Math.min(timeElapsed / duration, 1);
+
+      // Apply easing
+      const easedProgress = easeInOutCubic(progress);
+
+      window.scrollTo(0, startPosition + distance * easedProgress);
+
+      if (progress < 1) {
+        requestAnimationFrame(animateScroll);
+      }
+    };
+
+    requestAnimationFrame(animateScroll);
   };
   return (
     <div className="pb-16 px-8 md:px-16 relative mt-12 h-dvh flex flex-col justify-between gap-12">
@@ -79,18 +120,20 @@ export function SummarySection() {
         />
 
         {/* Scroll indicator */}
-        <button
-          onClick={scrollToNextSection}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 group cursor-pointer"
-          aria-label="Scroll to next section"
-        >
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-6 h-10 border-2 border-foreground/30 rounded-full flex items-start justify-center p-1.5 group-hover:border-foreground/50 transition-colors">
-              <div className="w-1 h-2 bg-foreground/50 rounded-full animate-scroll-down group-hover:bg-foreground/70" />
+        {showScrollButton && (
+          <button
+            onClick={scrollToNextSection}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 group cursor-pointer transition-opacity duration-500"
+            aria-label="Scroll to next section"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-6 h-10 border-2 border-foreground/30 rounded-full flex items-start justify-center p-1.5 group-hover:border-foreground/50 transition-colors">
+                <div className="w-1 h-2 bg-foreground/50 rounded-full animate-scroll-down group-hover:bg-foreground/70" />
+              </div>
+              <ChevronDown className="w-5 h-5 text-foreground/30 group-hover:text-foreground/50 transition-all animate-bounce-subtle" />
             </div>
-            <ChevronDown className="w-5 h-5 text-foreground/30 group-hover:text-foreground/50 transition-all animate-bounce-subtle" />
-          </div>
-        </button>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -111,7 +154,7 @@ function HighlightCard({ icon, title, description }: {
       className="group p-6"
     >
       <div className="relative z-30">
-        <div className="mb-4 p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg w-fit text-white group-hover:scale-110 transition-transform">
+        <div className="mb-4 p-3 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg w-fit text-white group-hover:scale-110 transition-transform">
           {icon}
         </div>
         <h3 className="mb-2 text-white">{title}</h3>
