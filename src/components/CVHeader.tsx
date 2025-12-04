@@ -57,7 +57,7 @@ export function CVHeader() {
 
   return (
     <div className="relative overflow-hidden">
-      <div className="relative z-10 px-8 md:px-16 flex flex-col gap-12 h-dvh">
+      <div className="relative z-10 px-0 md:px-16 flex flex-col gap-12 h-dvh">
         <div className="max-w-5xl mx-auto flex flex-col justify-center items-center grow">
           <div className="">
             <div className="text-center mb-12">

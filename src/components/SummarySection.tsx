@@ -52,7 +52,7 @@ export function SummarySection() {
     requestAnimationFrame(animateScroll);
   };
   return (
-    <div className="pb-16 px-8 md:px-16 relative mt-12 h-dvh flex flex-col justify-between gap-12">
+    <div className="pb-16 px-8 md:px-16 relative mt-12 min-h-dvh md:h-dvh flex flex-col justify-between gap-12">
       <div className="max-w-4xl mx-auto relative z-10 grow flex flex-col justify-center">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl mb-4 text-white">
@@ -64,18 +64,18 @@ export function SummarySection() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           <HighlightCard
             icon={<Brain className="w-6 h-6" />}
-            title="AI Expertise"
-            description="Deep experience with LLMs, AI integration, and cutting-edge technologies"
+            title="AI & LLMs"
+            description="Built agentic workflows with tool calling, RAG pipelines, and multi-model systems in production"
           />
           <HighlightCard
             icon={<Code className="w-6 h-6" />}
-            title="Full Stack Development"
-            description="Comprehensive web development skills across modern frameworks and technologies"
+            title="Full Stack"
+            description="TypeScript, Svelte/SvelteKit, React, Node.js, PostgreSQL, AWS"
           />
           <HighlightCard
             icon={<Lightbulb className="w-6 h-6" />}
-            title="Innovation Leader"
-            description="CTO experience driving product development and technical strategy"
+            title="Startup Experience"
+            description="CTO at Audemic, founding engineer at two other startups. Shipped from 0→1"
           />
         </div>
 
@@ -92,48 +92,11 @@ export function SummarySection() {
               Currently working as <strong>Lead Developer at Navar and Founding engineer/Product manager for KnowThyself360°</strong>.
 
             </p>
-            <p className="text-white leading-relaxed text-lg mt-4">
-              My educational and career path started in Business and Economics, but I soon discovered that my passion and skill was in computer programming.
-              What I love most about programming is the ability to create a product from scratch using my own hands (or fingers).
-            </p>
             <p className="text-white/80 mt-6 italic">
               🌍 I grew up and lived in Colombia, USA, India, The Netherlands, and Austria. I am currently living in Spain.
             </p>
           </div>
         </LiquidGlassCard>
-      </div>
-      <div className='relative h-56 w-full overflow-hidden flex flex-col items-center'>
-        <div className='absolute inset-x-0 top-0 flex justify-center'>
-          <div className='bg-linear-to-r from-transparent via-yellow-200 to-transparent h-[2px] w-1/2 blur-xs' />
-        </div>
-        <div className='absolute inset-x-0 top-0 flex justify-center'>
-          <div className='bg-linear-to-r from-transparent via-yellow-100 to-transparent h-px w-1/2' />
-        </div>
-        <div className='absolute inset-x-0 top-0 flex justify-center'>
-          <div className='bg-linear-to-r from-transparent via-yellow-50 to-transparent h-px w-1/4' />
-        </div>
-
-        <Sparkles
-          density={1200}
-          mousemove={true}
-          className='absolute inset-x-0 -mt-24 top-0 h-full w-full mask-[radial-gradient(50%_50%,white,transparent_55%)]'
-        />
-
-        {/* Scroll indicator */}
-        {showScrollButton && (
-          <button
-            onClick={scrollToNextSection}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 group cursor-pointer transition-opacity duration-500"
-            aria-label="Scroll to next section"
-          >
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-6 h-10 border-2 border-foreground/30 rounded-full flex items-start justify-center p-1.5 group-hover:border-foreground/50 transition-colors">
-                <div className="w-1 h-2 bg-foreground/50 rounded-full animate-scroll-down group-hover:bg-foreground/70" />
-              </div>
-              <ChevronDown className="w-5 h-5 text-foreground/30 group-hover:text-foreground/50 transition-all animate-bounce-subtle" />
-            </div>
-          </button>
-        )}
       </div>
     </div>
   );
