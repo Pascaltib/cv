@@ -10,10 +10,12 @@ import {
   GridDistortion,
   LinearGradient
 } from 'shaders/react'
+import { ScrollProgress } from './ScrollProgress';
 
 export default function App() {
   return (
     <div className="min-h-screen bg-background relative">
+      <ScrollProgress />
       <Shader style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0 }}>
         <LinearGradient
           end={{ "x": 0.8535883654758141, "y": 0.19244874731265896 }}
