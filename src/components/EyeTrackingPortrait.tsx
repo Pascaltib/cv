@@ -16,8 +16,8 @@ export function EyeTrackingPortrait({
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const X_STEPS = 10;
-    const Y_STEPS = 10;
+    const X_STEPS = 20;
+    const Y_STEPS = 20;
     const FPS = 60;
 
     useEffect(() => {

@@ -57,6 +57,11 @@ export function CVHeader() {
 
   return (
     <div className="relative overflow-hidden">
+      {/* Retro Computer - fixed position, draggable across entire page */}
+      <div className="hidden lg:block fixed right-10 2xl:right-20 bottom-20 z-50">
+        <RetroComputer videoSrc="/cv/dance_color_500_30fps.mp4" />
+      </div>
+
       <div className="relative z-10 px-0 md:px-16 flex flex-col gap-12 h-dvh">
         <div className="max-w-5xl mx-auto flex flex-col justify-center items-center grow">
           <div className="">
@@ -80,8 +85,8 @@ export function CVHeader() {
             <div className="flex justify-center">
               <EyeTrackingPortrait
                 videoSrc="/cv/pascal.mp4"
-                size={150}
-                maxDistance={500}
+                size={250}
+                maxDistance={1000}
                 className="transition-transform duration-300 hover:scale-105"
               />
             </div>
@@ -174,5 +179,125 @@ function ContactItem({ icon, label, href }: {
         </div>
       </a>
     </LiquidGlassCard>
+  );
+}
+
+function RetroComputer({ videoSrc }: { videoSrc: string }) {
+  // Responsive sizing: smaller on laptops, full size on larger screens
+  const [size, setSize] = useState({ width: 340, height: 290 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = React.useRef({ x: 0, y: 0 });
+
+  // Handle responsive sizing
+  useEffect(() => {
+    const updateSize = () => {
+      const width = window.innerWidth;
+      if (width >= 1536) {
+        // 2xl and above: full size
+        setSize({ width: 340, height: 290 });
+      } else if (width >= 1280) {
+        // xl: slightly smaller
+        setSize({ width: 280, height: 238 });
+      } else {
+        // lg (1024-1279): smallest size (~70%)
+        setSize({ width: 240, height: 205 });
+      }
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    dragStart.current = {
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    };
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      setPosition({
+        x: e.clientX - dragStart.current.x,
+        y: e.clientY - dragStart.current.y,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  return (
+    <div
+      className={`relative select-none cursor-grab active:cursor-grabbing ${!isDragging ? 'transition-[width,height] duration-300' : ''}`}
+      style={{
+        width: size.width,
+        height: size.height,
+        transform: `translate(${position.x}px, ${position.y}px) rotate(6deg)`,
+      }}
+      onMouseDown={handleMouseDown}
+    >
+      {/* Video layer - positioned BEHIND in the screen area */}
+      <div
+        className="absolute overflow-hidden"
+        style={{
+          top: '15%',
+          left: '22%',
+          width: '45%',
+          height: '35%',
+          borderRadius: '2px',
+        }}
+      >
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        >
+          <source src={videoSrc} type='video/webm; codecs="vp9"' />
+        </video>
+
+        {/* CRT scanlines overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-30"
+          style={{
+            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.3) 1px, rgba(0,0,0,0.3) 2px)',
+          }}
+        />
+
+        {/* Screen glow */}
+        <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-transparent" />
+
+        {/* Vignette for CRT curve effect */}
+        <div
+          className="absolute inset-0"
+          style={{ boxShadow: 'inset 0 0 20px rgba(0,0,0,0.4)' }}
+        />
+      </div>
+
+      {/* Computer image - sits on top */}
+      <img
+        src="/cv/apple-iigs.png"
+        alt=""
+        className="relative z-10 w-full h-full object-contain pointer-events-none"
+        draggable={false}
+      />
+    </div>
   );
 }

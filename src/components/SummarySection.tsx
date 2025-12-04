@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Brain, Code, Lightbulb, ChevronDown } from 'lucide-react';
 import { LiquidGlassCard } from './LiquidGlassCard';
-import { Sparkles } from './Sparkles';
 
 export function SummarySection() {
   const [showScrollButton, setShowScrollButton] = useState(true);
