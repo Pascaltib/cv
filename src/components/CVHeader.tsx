@@ -8,6 +8,29 @@ import { HyperText } from './HyperText';
 
 export function CVHeader() {
   const [showScrollButton, setShowScrollButton] = useState(true);
+  const [maxDistance, setMaxDistance] = useState(1000);
+
+  // Responsive maxDistance for eye tracking based on screen width
+  useEffect(() => {
+    const updateMaxDistance = () => {
+      const width = window.innerWidth;
+      // Linear interpolation: 1000 at 1440px, 1750 at 3440px
+      const minWidth = 1440;
+      const maxWidth = 3440;
+      const minDistance = 1000;
+      const maxDistanceValue = 1750;
+
+      const clampedWidth = Math.max(minWidth, Math.min(maxWidth, width));
+      const t = (clampedWidth - minWidth) / (maxWidth - minWidth);
+      const distance = Math.round(minDistance + t * (maxDistanceValue - minDistance));
+
+      setMaxDistance(distance);
+    };
+
+    updateMaxDistance();
+    window.addEventListener('resize', updateMaxDistance);
+    return () => window.removeEventListener('resize', updateMaxDistance);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -86,7 +109,7 @@ export function CVHeader() {
               <EyeTrackingPortrait
                 videoSrc="/cv/pascal.mp4"
                 size={250}
-                maxDistance={1000}
+                maxDistance={maxDistance}
                 className="transition-transform duration-300 hover:scale-105"
               />
             </div>
