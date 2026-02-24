@@ -5,6 +5,7 @@ import { LiquidGlassCard } from './LiquidGlassCard';
 import { Sparkles } from './Sparkles';
 import { LineShadowText } from './LineShadowText';
 import { HyperText } from './HyperText';
+import WebcamPixelGrid from './ui/webcam-pixel-grid';
 
 export function CVHeader() {
   const [showScrollButton, setShowScrollButton] = useState(true);
@@ -80,7 +81,12 @@ export function CVHeader() {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Retro Computer - fixed position, draggable across entire page */}
+      {/* Left TV with webcam grid */}
+      <div className="hidden lg:block absolute left-6 xl:left-8 2xl:left-10 bottom-20 z-30">
+        <RetroTV />
+      </div>
+
+      {/* Original right CRT monitor */}
       <div className="hidden lg:block fixed right-10 2xl:right-20 bottom-20 z-50">
         <RetroComputer videoSrc="/cv/dance_color_500_30fps.mp4" />
       </div>
@@ -317,6 +323,73 @@ function RetroComputer({ videoSrc }: { videoSrc: string }) {
       {/* Computer image - sits on top */}
       <img
         src="/cv/apple-iigs.png"
+        alt=""
+        className="relative z-10 w-full h-full object-contain pointer-events-none"
+        draggable={false}
+      />
+    </div>
+  );
+}
+
+function RetroTV() {
+  const [size, setSize] = useState({ width: 300, height: 300 });
+
+  useEffect(() => {
+    const updateSize = () => {
+      const width = window.innerWidth;
+      if (width >= 1536) {
+        setSize({ width: 709, height: 709 });
+      } else if (width >= 1280) {
+        setSize({ width: 500, height: 500 });
+      } else {
+        setSize({ width: 240, height: 240 });
+      }
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
+  return (
+    <div
+      className="relative select-none transition-[width,height] duration-300"
+      style={{
+        width: size.width,
+        height: size.height,
+        transform: 'rotate(-2deg)',
+      }}
+    >
+      <div
+        className="absolute z-20 overflow-hidden"
+        style={{
+          top: '22%',
+          left: '23%',
+          width: '45.5%',
+          height: '34%',
+          borderRadius: '9%',
+        }}
+      >
+        <WebcamPixelGrid
+          gridCols={48}
+          gridRows={32}
+          maxElevation={28}
+          motionSensitivity={0.35}
+          elevationSmoothing={0.2}
+          colorMode="webcam"
+          backgroundColor="#030303"
+          mirror={true}
+          gapRatio={0.06}
+          invertColors={false}
+          darken={0}
+          borderColor="#ffffff"
+          borderOpacity={0.03}
+          className="h-full w-full"
+        />
+      </div>
+
+      <img
+        src="/cv/retro-tv.png"
         alt=""
         className="relative z-10 w-full h-full object-contain pointer-events-none"
         draggable={false}
