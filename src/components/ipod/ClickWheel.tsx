@@ -7,6 +7,10 @@ import { useClickWheelSound } from "./ClickWheelSoundProvider"
 interface ClickWheelProps {
   onNext: () => void
   onPrevious: () => void
+  onNextDown?: () => void
+  onNextUp?: () => void
+  onPreviousDown?: () => void
+  onPreviousUp?: () => void
   onPlayPause: () => void
   onMenu: () => void
   onSelect: () => void
@@ -21,6 +25,10 @@ interface ClickWheelProps {
 export function ClickWheel({
   onNext,
   onPrevious,
+  onNextDown,
+  onNextUp,
+  onPreviousDown,
+  onPreviousUp,
   onPlayPause,
   onMenu,
   onSelect,
@@ -164,17 +172,25 @@ export function ClickWheel({
             MENU
           </button>
 
-          {/* Previous Button - Left with raised icon effect */}
+          {/* Previous Button - Left: tap = prev track, hold = rewind */}
           <button
-            onClick={onPrevious}
+            onMouseDown={onPreviousDown}
+            onMouseUp={onPreviousUp}
+            onMouseLeave={onPreviousUp}
+            onTouchStart={onPreviousDown}
+            onTouchEnd={onPreviousUp}
             className="absolute left-6 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-20 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"
           >
             <SkipBack size={20} fill="white" />
           </button>
 
-          {/* Next Button - Right with raised icon effect */}
+          {/* Next Button - Right: tap = next track, hold = fast-forward */}
           <button
-            onClick={onNext}
+            onMouseDown={onNextDown}
+            onMouseUp={onNextUp}
+            onMouseLeave={onNextUp}
+            onTouchStart={onNextDown}
+            onTouchEnd={onNextUp}
             className="absolute right-6 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-20 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"
           >
             <SkipForward size={20} fill="white" />

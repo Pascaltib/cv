@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Linkedin, Github, ChevronDown } from 'lucide-react';
 import { EyeTrackingPortrait } from './EyeTrackingPortrait';
 import { LiquidGlassCard } from './LiquidGlassCard';
@@ -7,12 +7,6 @@ import { LineShadowText } from './LineShadowText';
 import { HyperText } from './HyperText';
 import WebcamPixelGrid from './ui/webcam-pixel-grid';
 import { useMusicPlayback } from './ipod/music-playback-context';
-
-declare global {
-  interface Window {
-    YT: any;
-  }
-}
 
 export function CVHeader() {
   const [showScrollButton, setShowScrollButton] = useState(true);
@@ -217,49 +211,10 @@ function RetroComputer({ videoSrc }: { videoSrc: string }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = React.useRef({ x: 0, y: 0 });
-  const screenRef = useRef<HTMLDivElement>(null);
-  const { navigation, isPlaying, setVideoRect } = useMusicPlayback();
+  const { navigation, isPlaying } = useMusicPlayback();
 
-  const shouldShowVideo = !!(navigation.selectedSong && isPlaying);
-
-  const updateRect = useCallback(() => {
-    const el = screenRef.current;
-    if (!el) {
-      setVideoRect(null);
-      return;
-    }
-    if (shouldShowVideo) {
-      const rect = el.getBoundingClientRect();
-      setVideoRect({
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-      });
-    } else {
-      setVideoRect(null);
-    }
-  }, [shouldShowVideo, setVideoRect]);
-
-  useEffect(() => {
-    updateRect();
-  }, [updateRect, size, position]);
-
-  useEffect(() => {
-    if (!shouldShowVideo) return;
-    window.addEventListener('scroll', updateRect, true);
-    window.addEventListener('resize', updateRect);
-    const interval = setInterval(updateRect, 500);
-    return () => {
-      window.removeEventListener('scroll', updateRect, true);
-      window.removeEventListener('resize', updateRect);
-      clearInterval(interval);
-    };
-  }, [shouldShowVideo, updateRect]);
-
-  useEffect(() => {
-    return () => setVideoRect(null);
-  }, [setVideoRect]);
+  const currentVideoId = navigation.selectedSong?.id;
+  const showYouTube = !!currentVideoId && isPlaying;
 
   useEffect(() => {
     const updateSize = () => {
@@ -321,7 +276,6 @@ function RetroComputer({ videoSrc }: { videoSrc: string }) {
       onMouseDown={handleMouseDown}
     >
       <div
-        ref={screenRef}
         className="absolute overflow-hidden"
         style={{
           top: '15%',
@@ -331,17 +285,33 @@ function RetroComputer({ videoSrc }: { videoSrc: string }) {
           borderRadius: '2px',
         }}
       >
-        <video
-          src={videoSrc}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="h-full w-full object-cover"
-          style={{ display: shouldShowVideo ? 'none' : 'block' }}
-        />
+        {showYouTube ? (
+          <iframe
+            key={currentVideoId}
+            src={`https://www.youtube.com/embed/${currentVideoId}?autoplay=1&mute=1&controls=0&showinfo=0&modestbranding=1&loop=1&playlist=${currentVideoId}&playsinline=1&rel=0&iv_load_policy=3&disablekb=1`}
+            allow="autoplay; encrypted-media"
+            className="absolute border-0"
+            style={{
+              pointerEvents: 'none',
+              top: '-10%',
+              left: '-10%',
+              width: '120%',
+              height: '120%',
+            }}
+          />
+        ) : (
+          <video
+            src={videoSrc}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="h-full w-full object-cover"
+          />
+        )}
       </div>
 
+      {/* Computer image - sits on top */}
       <img
         src="/cv/apple-iigs.png"
         alt=""

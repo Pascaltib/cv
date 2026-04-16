@@ -19,6 +19,18 @@ export interface Artist {
 
 export const musicLibrary: Artist[] = [
   {
+    name: "Nox Vahn",
+    albums: [
+      {
+        name: "Come Together",
+        year: "2020",
+        songs: [
+          { id: "wULG18MXKz4", title: "Come Together", duration: "5:30" },
+        ],
+      },
+    ],
+  },
+  {
     name: "Daft Punk",
     albums: [
       {
@@ -66,18 +78,6 @@ export const musicLibrary: Artist[] = [
           { id: "sy1dYFGkPUE", title: "D.A.N.C.E.", duration: "4:02" },
           { id: "VKzWLUQizz8", title: "Genesis", duration: "3:53" },
           { id: "dXokkMPhRrY", title: "Phantom Pt. II", duration: "4:28" },
-        ],
-      },
-    ],
-  },
-  {
-    name: "Nox Vahn",
-    albums: [
-      {
-        name: "Come Together",
-        year: "2020",
-        songs: [
-          { id: "wULG18MXKz4", title: "Come Together", duration: "5:30" },
         ],
       },
     ],

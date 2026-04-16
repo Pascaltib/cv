@@ -6,7 +6,7 @@ import { useMusicPlayback } from "./music-playback-context"
 import { useClickWheelSound } from "./ClickWheelSoundProvider"
 
 export function IPodClassic() {
-  const { navigation, setNavigation, selectedIndex, setSelectedIndex, isPlaying, setIsPlaying, volume, setVolume } =
+  const { navigation, setNavigation, selectedIndex, setSelectedIndex, isPlaying, setIsPlaying, volume, setVolume, playerRef } =
     useMusicPlayback()
 
   const { playClick } = useClickWheelSound()
@@ -19,6 +19,14 @@ export function IPodClassic() {
   const dragStart = useRef({ x: 0, y: 0 })
   const posRef = useRef({ x: 0, y: 0 })
   const hasMoved = useRef(false)
+
+  // Hold-to-seek state
+  const seekHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const seekInterval = useRef<ReturnType<typeof setInterval> | null>(null)
+  const isSeeking = useRef(false)
+  const SEEK_HOLD_DELAY = 500
+  const SEEK_STEP_SECONDS = 5
+  const SEEK_INTERVAL_MS = 300
 
   const [collapsed, setCollapsed] = useState(false)
 
@@ -144,33 +152,93 @@ export function IPodClassic() {
     }
   }
 
-  const handleNext = () => {
-    playClick()
-    showUI()
-    if (navigation.selectedAlbum && navigation.selectedSong) {
-      const songs = navigation.selectedAlbum.songs
-      const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
-      if (currentIndex < songs.length - 1) {
-        const nextSong = songs[currentIndex + 1]
-        setNavigation({ ...navigation, selectedSong: nextSong })
-        setIsPlaying(true)
+  const seekBy = useCallback((seconds: number) => {
+    try {
+      const current = playerRef.current?.getCurrentTime?.()
+      const duration = playerRef.current?.getDuration?.()
+      if (typeof current === "number" && typeof duration === "number") {
+        const target = Math.max(0, Math.min(duration, current + seconds))
+        playerRef.current.seekTo(target, true)
       }
-    }
-  }
+    } catch { /* player not ready */ }
+  }, [playerRef])
 
-  const handlePrevious = () => {
-    playClick()
-    showUI()
-    if (navigation.selectedAlbum && navigation.selectedSong) {
-      const songs = navigation.selectedAlbum.songs
-      const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
-      if (currentIndex > 0) {
-        const prevSong = songs[currentIndex - 1]
-        setNavigation({ ...navigation, selectedSong: prevSong })
-        setIsPlaying(true)
+  const clearSeekTimers = useCallback(() => {
+    if (seekHoldTimer.current) {
+      clearTimeout(seekHoldTimer.current)
+      seekHoldTimer.current = null
+    }
+    if (seekInterval.current) {
+      clearInterval(seekInterval.current)
+      seekInterval.current = null
+    }
+  }, [])
+
+  const handleNextDown = useCallback(() => {
+    isSeeking.current = false
+    clearSeekTimers()
+    seekHoldTimer.current = setTimeout(() => {
+      isSeeking.current = true
+      showUI()
+      seekBy(SEEK_STEP_SECONDS)
+      seekInterval.current = setInterval(() => {
+        seekBy(SEEK_STEP_SECONDS)
+      }, SEEK_INTERVAL_MS)
+    }, SEEK_HOLD_DELAY)
+  }, [clearSeekTimers, seekBy])
+
+  const handleNextUp = useCallback(() => {
+    clearSeekTimers()
+    if (!isSeeking.current) {
+      playClick()
+      showUI()
+      if (navigation.selectedAlbum && navigation.selectedSong) {
+        const songs = navigation.selectedAlbum.songs
+        const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
+        if (currentIndex < songs.length - 1) {
+          const nextSong = songs[currentIndex + 1]
+          setNavigation({ ...navigation, selectedSong: nextSong })
+          setIsPlaying(true)
+        }
       }
     }
-  }
+    isSeeking.current = false
+  }, [clearSeekTimers, playClick, navigation, setNavigation, setIsPlaying])
+
+  const handlePreviousDown = useCallback(() => {
+    isSeeking.current = false
+    clearSeekTimers()
+    seekHoldTimer.current = setTimeout(() => {
+      isSeeking.current = true
+      showUI()
+      seekBy(-SEEK_STEP_SECONDS)
+      seekInterval.current = setInterval(() => {
+        seekBy(-SEEK_STEP_SECONDS)
+      }, SEEK_INTERVAL_MS)
+    }, SEEK_HOLD_DELAY)
+  }, [clearSeekTimers, seekBy])
+
+  const handlePreviousUp = useCallback(() => {
+    clearSeekTimers()
+    if (!isSeeking.current) {
+      playClick()
+      showUI()
+      if (navigation.selectedAlbum && navigation.selectedSong) {
+        const songs = navigation.selectedAlbum.songs
+        const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
+        if (currentIndex > 0) {
+          const prevSong = songs[currentIndex - 1]
+          setNavigation({ ...navigation, selectedSong: prevSong })
+          setIsPlaying(true)
+        }
+      }
+    }
+    isSeeking.current = false
+  }, [clearSeekTimers, playClick, navigation, setNavigation, setIsPlaying])
+
+  useEffect(() => {
+    return () => clearSeekTimers()
+  }, [clearSeekTimers])
 
   const handlePlayPause = () => {
     playClick()
@@ -309,8 +377,12 @@ export function IPodClassic() {
               {/* Click Wheel */}
               <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
                 <ClickWheel
-                  onNext={handleNext}
-                  onPrevious={handlePrevious}
+                  onNext={handleNextUp}
+                  onPrevious={handlePreviousUp}
+                  onNextDown={handleNextDown}
+                  onNextUp={handleNextUp}
+                  onPreviousDown={handlePreviousDown}
+                  onPreviousUp={handlePreviousUp}
                   onPlayPause={handlePlayPause}
                   onMenu={handleMenu}
                   onSelect={handleSelect}

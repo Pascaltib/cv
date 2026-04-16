@@ -20,7 +20,7 @@ export default function App() {
       <ClickWheelSoundProvider>
         <div className="relative min-h-screen w-screen bg-black overflow-x-hidden">
           <ScrollProgress />
-          <Shader style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0 }}>
+          {/* <Shader style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0 }}>
             <SolidColor color="#1f0e45" />
             <Ascii cellSize={24} characters="⌁⌗⌔⌭">
               <WebcamTexture />
@@ -33,7 +33,7 @@ export default function App() {
                 visible={true}
               />
             </Ascii>
-          </Shader>
+          </Shader> */}
           <FluidCursor />
           <div className="relative z-10 pointer-events-auto">
             <CVHeader />

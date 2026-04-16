@@ -20,13 +20,6 @@ export interface NavigationState {
   selectedSong: Song | null
 }
 
-interface VideoRect {
-  top: number
-  left: number
-  width: number
-  height: number
-}
-
 interface MusicPlaybackContextType {
   navigation: NavigationState
   setNavigation: (state: NavigationState) => void
@@ -37,7 +30,6 @@ interface MusicPlaybackContextType {
   volume: number
   setVolume: (volume: number) => void
   playerRef: MutableRefObject<any>
-  setVideoRect: (rect: VideoRect | null) => void
 }
 
 const MusicPlaybackContext = createContext<MusicPlaybackContextType | undefined>(undefined)
@@ -60,7 +52,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(50)
   const playerRef = useRef<any>(null)
-  const [videoRect, setVideoRect] = useState<VideoRect | null>(null)
   const [playerReady, setPlayerReady] = useState(false)
   const previousSongRef = useRef<Song | null>(null)
   const isPlayingRef = useRef(isPlaying)
@@ -149,18 +140,13 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
       if (!container || playerRef.current) return
 
       playerRef.current = new window.YT.Player("youtube-player", {
-        height: "100%",
-        width: "100%",
+        height: "0",
+        width: "0",
         playerVars: {
           autoplay: 0,
           controls: 0,
-          showinfo: 0,
-          modestbranding: 1,
           playsinline: 1,
           enablejsapi: 1,
-          rel: 0,
-          iv_load_policy: 3,
-          disablekb: 1,
         },
         events: {
           onReady: () => setPlayerReady(true),
@@ -231,8 +217,6 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     }
   }, [volume, playerReady])
 
-  const showOnScreen = !!(videoRect && isPlaying && navigation.selectedSong)
-
   return (
     <MusicPlaybackContext.Provider
       value={{
@@ -245,36 +229,9 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         volume,
         setVolume,
         playerRef,
-        setVideoRect,
       }}
     >
-      <div
-        id="youtube-player-wrapper"
-        style={
-          showOnScreen && videoRect
-            ? {
-              position: "fixed",
-              top: videoRect.top,
-              left: videoRect.left,
-              width: videoRect.width,
-              height: videoRect.height,
-              overflow: "hidden",
-              pointerEvents: "none",
-              zIndex: 5,
-            }
-            : {
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: 0,
-              height: 0,
-              overflow: "hidden",
-              pointerEvents: "none",
-            }
-        }
-      >
-        <div id="youtube-player" style={{ width: "100%", height: "100%" }} />
-      </div>
+      <div id="youtube-player" style={{ display: "none" }} />
       {children}
     </MusicPlaybackContext.Provider>
   )
