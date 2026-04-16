@@ -4,6 +4,8 @@ import { cn } from "./utils";
 
 
 type WebcamPixelGridProps = {
+  /** Video file URL — when set, plays this file instead of using the webcam */
+  videoSrc?: string;
   /** Number of columns in the grid */
   gridCols?: number;
   /** Number of rows in the grid */
@@ -50,6 +52,7 @@ type PixelData = {
 };
 
 export const WebcamPixelGrid: React.FC<WebcamPixelGridProps> = ({
+  videoSrc,
   gridCols = 64,
   gridRows = 48,
   maxElevation = 15,
@@ -68,6 +71,7 @@ export const WebcamPixelGrid: React.FC<WebcamPixelGridProps> = ({
   onWebcamError,
   onWebcamReady,
 }) => {
+  const useVideoFile = !!videoSrc;
   const videoRef = useRef<HTMLVideoElement>(null);
   const processingCanvasRef = useRef<HTMLCanvasElement>(null);
   const displayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -114,8 +118,9 @@ export const WebcamPixelGrid: React.FC<WebcamPixelGridProps> = ({
 
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Request camera access
+  // Request camera access (webcam mode only)
   const requestCameraAccess = useCallback(async () => {
+    if (useVideoFile) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -141,10 +146,35 @@ export const WebcamPixelGrid: React.FC<WebcamPixelGridProps> = ({
       setError(error.message);
       onWebcamError?.(error);
     }
-  }, [onWebcamError, onWebcamReady]);
+  }, [useVideoFile, onWebcamError, onWebcamReady]);
 
-  // Initialize webcam on mount
+  // Initialize video source on mount
   useEffect(() => {
+    if (useVideoFile) {
+      const video = videoRef.current;
+      if (!video) return;
+
+      video.src = videoSrc!;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+
+      const handleReady = () => {
+        setIsReady(true);
+        setError(null);
+      };
+
+      video.addEventListener("loadeddata", handleReady);
+      video.play().catch(() => {});
+
+      return () => {
+        video.removeEventListener("loadeddata", handleReady);
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      };
+    }
+
     requestCameraAccess();
 
     return () => {
@@ -152,7 +182,7 @@ export const WebcamPixelGrid: React.FC<WebcamPixelGridProps> = ({
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [requestCameraAccess]);
+  }, [useVideoFile, videoSrc, requestCameraAccess]);
 
   // Main render loop
   const render = useCallback(() => {
@@ -426,8 +456,8 @@ export const WebcamPixelGrid: React.FC<WebcamPixelGridProps> = ({
         style={{ backgroundColor }}
       />
 
-      {/* Error popup */}
-      {error && showErrorPopup && (
+      {/* Error popup (webcam mode only) */}
+      {!useVideoFile && error && showErrorPopup && (
         <div className="animate-in fade-in slide-in-from-top-2 fixed top-4 right-4 z-50 duration-300">
           <div className="relative flex max-w-sm items-start gap-3 rounded-lg border border-white/10 bg-black/80 p-4 shadow-2xl backdrop-blur-xl">
             {/* Close button */}
@@ -499,8 +529,8 @@ export const WebcamPixelGrid: React.FC<WebcamPixelGridProps> = ({
         </div>
       )}
 
-      {/* Minimized error indicator */}
-      {error && !showErrorPopup && (
+      {/* Minimized error indicator (webcam mode only) */}
+      {!useVideoFile && error && !showErrorPopup && (
         <button
           onClick={() => setShowErrorPopup(true)}
           className="fixed top-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/60 text-white/50 shadow-lg backdrop-blur-xl transition-all hover:scale-105 hover:bg-black/80 hover:text-white/80"

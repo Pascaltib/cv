@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Mail, Linkedin, Github, ChevronDown } from 'lucide-react';
 import { EyeTrackingPortrait } from './EyeTrackingPortrait';
 import { LiquidGlassCard } from './LiquidGlassCard';
@@ -6,6 +6,13 @@ import { Sparkles } from './Sparkles';
 import { LineShadowText } from './LineShadowText';
 import { HyperText } from './HyperText';
 import WebcamPixelGrid from './ui/webcam-pixel-grid';
+import { useMusicPlayback } from './ipod/music-playback-context';
+
+declare global {
+  interface Window {
+    YT: any;
+  }
+}
 
 export function CVHeader() {
   const [showScrollButton, setShowScrollButton] = useState(true);
@@ -82,9 +89,9 @@ export function CVHeader() {
   return (
     <div className="relative overflow-hidden">
       {/* Left TV with webcam grid */}
-      <div className="hidden lg:block absolute left-6 xl:left-8 2xl:left-10 bottom-20 z-30">
+      {/* <div className="hidden lg:block absolute left-6 xl:left-8 2xl:left-0 bottom-20 z-30">
         <RetroTV />
-      </div>
+      </div> */}
 
       {/* Original right CRT monitor */}
       <div className="hidden lg:block fixed right-10 2xl:right-20 bottom-20 z-50">
@@ -107,7 +114,6 @@ export function CVHeader() {
                 </LineShadowText>
               </h1>
 
-              {/* <div className="w-24 h-1 bg-linear-to-r from-primary to-secondary mx-auto rounded-full"></div> */}
             </div>
 
             {/* Eye-tracking portrait */}
@@ -128,11 +134,6 @@ export function CVHeader() {
               label="Email"
               href="mailto:pascaltib@gmail.com"
             />
-            {/* <ContactItem
-              icon={<Phone className="w-5 h-5" />}
-              label="Phone"
-              href="tel:+34645587412"
-            /> */}
             <ContactItem
               icon={<Linkedin className="w-5 h-5" />}
               label="LinkedIn"
@@ -212,25 +213,63 @@ function ContactItem({ icon, label, href }: {
 }
 
 function RetroComputer({ videoSrc }: { videoSrc: string }) {
-  // Responsive sizing: smaller on laptops, full size on larger screens
   const [size, setSize] = useState({ width: 340, height: 290 });
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = React.useRef({ x: 0, y: 0 });
+  const screenRef = useRef<HTMLDivElement>(null);
+  const { navigation, isPlaying, setVideoRect } = useMusicPlayback();
 
-  // Handle responsive sizing
+  const shouldShowVideo = !!(navigation.selectedSong && isPlaying);
+
+  const updateRect = useCallback(() => {
+    const el = screenRef.current;
+    if (!el) {
+      setVideoRect(null);
+      return;
+    }
+    if (shouldShowVideo) {
+      const rect = el.getBoundingClientRect();
+      setVideoRect({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      });
+    } else {
+      setVideoRect(null);
+    }
+  }, [shouldShowVideo, setVideoRect]);
+
+  useEffect(() => {
+    updateRect();
+  }, [updateRect, size, position]);
+
+  useEffect(() => {
+    if (!shouldShowVideo) return;
+    window.addEventListener('scroll', updateRect, true);
+    window.addEventListener('resize', updateRect);
+    const interval = setInterval(updateRect, 500);
+    return () => {
+      window.removeEventListener('scroll', updateRect, true);
+      window.removeEventListener('resize', updateRect);
+      clearInterval(interval);
+    };
+  }, [shouldShowVideo, updateRect]);
+
+  useEffect(() => {
+    return () => setVideoRect(null);
+  }, [setVideoRect]);
+
   useEffect(() => {
     const updateSize = () => {
       const width = window.innerWidth;
       if (width >= 1536) {
-        // 2xl and above: full size
-        setSize({ width: 340, height: 290 });
+        setSize({ width: 470, height: 400 });
       } else if (width >= 1280) {
-        // xl: slightly smaller
-        setSize({ width: 280, height: 238 });
+        setSize({ width: 390, height: 332 });
       } else {
-        // lg (1024-1279): smallest size (~70%)
-        setSize({ width: 240, height: 205 });
+        setSize({ width: 330, height: 282 });
       }
     };
 
@@ -281,8 +320,8 @@ function RetroComputer({ videoSrc }: { videoSrc: string }) {
       }}
       onMouseDown={handleMouseDown}
     >
-      {/* Video layer - positioned BEHIND in the screen area */}
       <div
+        ref={screenRef}
         className="absolute overflow-hidden"
         style={{
           top: '15%',
@@ -293,34 +332,16 @@ function RetroComputer({ videoSrc }: { videoSrc: string }) {
         }}
       >
         <video
+          src={videoSrc}
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover"
-        >
-          <source src={videoSrc} type='video/webm; codecs="vp9"' />
-        </video>
-
-        {/* CRT scanlines overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-30"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.3) 1px, rgba(0,0,0,0.3) 2px)',
-          }}
-        />
-
-        {/* Screen glow */}
-        <div className="absolute inset-0 bg-linear-to-br from-white/5 via-transparent to-transparent" />
-
-        {/* Vignette for CRT curve effect */}
-        <div
-          className="absolute inset-0"
-          style={{ boxShadow: 'inset 0 0 20px rgba(0,0,0,0.4)' }}
+          className="h-full w-full object-cover"
+          style={{ display: shouldShowVideo ? 'none' : 'block' }}
         />
       </div>
 
-      {/* Computer image - sits on top */}
       <img
         src="/cv/apple-iigs.png"
         alt=""
@@ -338,9 +359,9 @@ function RetroTV() {
     const updateSize = () => {
       const width = window.innerWidth;
       if (width >= 1536) {
-        setSize({ width: 709, height: 709 });
+        setSize({ width: 680, height: 680 });
       } else if (width >= 1280) {
-        setSize({ width: 500, height: 500 });
+        setSize({ width: 480, height: 480 });
       } else {
         setSize({ width: 240, height: 240 });
       }
