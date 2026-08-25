@@ -122,7 +122,7 @@ export function CVHeader() {
             <HyperText className='mt-4'>Full Stack Developer</HyperText>
           </div>
 
-          <div className="flex gap-4 w-fit mt-4">
+          <div className="flex flex-wrap justify-center gap-4 w-fit max-w-full px-4 mt-4">
             <ContactItem
               icon={<Mail className="w-5 h-5" />}
               label="Email"

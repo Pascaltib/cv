@@ -18,7 +18,7 @@ export default function App() {
   return (
     <MusicPlaybackProvider>
       <ClickWheelSoundProvider>
-        <div className="relative min-h-screen w-screen bg-black overflow-x-hidden">
+        <div className="relative min-h-screen w-full bg-black overflow-x-hidden">
           <ScrollProgress />
           <Shader style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0 }}>
             <SolidColor color="#1f0e45" />
