@@ -13,16 +13,16 @@ interface Experience {
 
 const experiences: Experience[] = [
   {
-    title: "Software Engineer & Product Manager",
+    title: "Founding Engineer & Product Manager",
     company: "KnowThyself360°",
     location: "United States · Remote",
     period: "January 2024 - Present",
     description: [
-      "Founder and developer for tech startup based in the US.",
-      "Responsible for product management and technical development of app.",
-      "Tech stack: Svelte, Sveltekit, Shadcn, TypeScript, Prisma ORM, Tailwind, AI SDK integrating several AI models"
+      "Sole developer of an AI 360° feedback platform, around 113k lines of Svelte and TypeScript.",
+      "Built the multi-stage LLM report pipeline (anonymization, theme extraction, narrative reports, blind-spot insights), Stripe billing, multi-week feedback workflows and an internal harness that benchmarks the pipeline across five models.",
+      "Run sales demos, onboarding and support for B2B clients including an NHS trust. Handle pricing, paid campaigns, email deliverability and website copy."
     ],
-    technologies: ["Svelte", "SvelteKit", "TypeScript", "Prisma ORM", "Tailwind CSS", "OpenAI API"],
+    technologies: ["Svelte 5", "SvelteKit", "TypeScript", "Prisma", "PostgreSQL (Neon)", "Tailwind CSS", "Vercel AI SDK", "Stripe", "Inngest", "Resend", "ElevenLabs"],
     website: "https://knowthyself360.ai"
   },
   {
@@ -31,15 +31,12 @@ const experiences: Experience[] = [
     location: "Hamburg, Germany · Remote",
     period: "July 2023 - Present",
     description: [
-      "I'm the Lead Developer at Navar, where we're deploying AI to redefine business transformation. Our tool is a catalyst for change, aiding in market adaptation, tech modernization, and efficiency gains. My role is twofold: leveraging LLMS to automate transformational consulting for B2B clients and ensuring a topnotch user experience and product.",
-      "Key Responsibilities:",
-      "Architect and implement multi-model AI systems utilizing OpenAI GPT models, Google Gemini, and Anthropic Claude to provide diverse AI capabilities and optimal performance for different use cases.",
-      "Design and maintain RAG (Retrieval-Augmented Generation) pipelines that enhance AI responses with contextual business data and domain-specific knowledge.",
-      "Developing early stage product and scaling to a more comprehensive transformation platform with enterprise-grade AI integration.",
-      "Working on infrastructure aspects to ensure optimal performance, privacy, and security across multiple AI model providers.",
-      "Leading technical architecture decisions for seamless AI model switching and fallback mechanisms."
+      "Sole engineer (950+ commits) of a B2B platform for AI-assisted business transformation: chat workspaces with live AI-edited documents, and \"lenses\", AI advisors modeled on real experts or on the user's own decision-making.",
+      "Built the multi-model AI layer (Claude, GPT, Gemini) with provider failover, prompt caching and context-window management.",
+      "Wrote an MCP server and an OAuth 2.1 authorization server so tools like Claude Code and Cursor can consult lenses directly.",
+      "Added per-step cost tracking, credit metering and usage-based billing for agentic loops, plus durable background jobs and document ingestion."
     ],
-    technologies: ["TypeScript", "SvelteKit", "Svelte", "Prisma ORM", "Tailwind", "Vercel AI SDK", "OpenAI GPT", "Google Gemini", "Anthropic Claude", "Azure OpenAI", "Pinecone", "RAG"],
+    technologies: ["TypeScript", "SvelteKit", "Svelte 5", "Prisma", "PostgreSQL (Neon)", "Tailwind", "Vercel AI SDK", "MCP", "OAuth 2.1", "Polar", "Upstash Redis", "Vercel"],
     website: "https://navar.ai"
   },
   {
@@ -48,7 +45,9 @@ const experiences: Experience[] = [
     location: "Madrid, Community of Madrid, Spain",
     period: "March 2022 - March 2024",
     description: [
-      "As the CTO at Audemic, I am responsible for the development of our online web platform as a Full Stack Developer, implementing our cloud architecture on AWS, and overseeing the development of a productiongrade machine learning NLP model. We are now in the process of developing a new product which will be interfaced through a mobile application \"Audemic Insights\". I am in charge of the development of both the backend infrastructure and the React Native frontend."
+      "Led development of the online web platform as a full stack developer and implemented the cloud architecture on AWS.",
+      "Oversaw development of a production-grade machine learning NLP model.",
+      "Built the Audemic Insights mobile app, owning the backend infrastructure and the React Native frontend."
     ],
     technologies: ["AWS", "Machine Learning", "NLP", "React Native", "Full Stack Development"],
     website: "https://audemic.io"

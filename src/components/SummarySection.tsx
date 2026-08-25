@@ -64,17 +64,17 @@ export function SummarySection() {
           <HighlightCard
             icon={<Brain className="w-6 h-6" />}
             title="AI & LLMs"
-            description="Built agentic workflows with tool calling, RAG pipelines, and multi-model systems in production"
+            description="Agentic tool calling, multi-model routing, MCP servers, prompt caching, evals and cost metering in production"
           />
           <HighlightCard
             icon={<Code className="w-6 h-6" />}
             title="Full Stack"
-            description="TypeScript, Svelte/SvelteKit, React, Node.js, PostgreSQL, AWS"
+            description="Sole developer of two production AI SaaS products, over 165,000 lines of TypeScript and Svelte"
           />
           <HighlightCard
             icon={<Lightbulb className="w-6 h-6" />}
-            title="Startup Experience"
-            description="CTO at Audemic, founding engineer at two other startups. Shipped from 0→1"
+            title="Startup Generalist"
+            description="CTO at Audemic, founding engineer at two other startups. Sales demos, onboarding, marketing and investor updates"
           />
         </div>
 
@@ -88,8 +88,9 @@ export function SummarySection() {
         >
           <div className="relative z-30">
             <p className="text-white leading-relaxed text-lg">
-              Currently working as <strong>Lead Developer at Navar and Founding engineer/Product manager for KnowThyself360°</strong>.
-
+              Currently working as <strong>Lead Developer at Navar and Founding Engineer/Product Manager for KnowThyself360°</strong>.
+              Sole developer of both products, shipping LLM systems in production while also running the
+              commercial side: sales demos, customer onboarding, marketing and investor updates.
             </p>
             <p className="text-white/80 mt-6 italic">
               🌍 I grew up and lived in Colombia, USA, India, The Netherlands, and Austria. I am currently living in Spain.

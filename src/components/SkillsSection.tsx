@@ -10,28 +10,28 @@ interface SkillCategory {
 
 const skillCategories: SkillCategory[] = [
   {
-    title: "Industry Knowledge",
+    title: "AI & LLM Engineering",
     icon: <Brain className="w-6 h-6" />,
-    skills: ["TypeScript", "Artificial Intelligence (AI)", "Large Language Models (LLM)", "API Development", "Full-Stack Development"],
+    skills: ["Agentic tool-calling systems", "Multi-model routing (Claude, GPT, Gemini)", "MCP servers", "Prompt caching", "LLM evals & cost metering", "RAG", "Vector databases"],
     color: "from-pink-500 to-rose-500"
   },
   {
-    title: "Tools & Technologies",
+    title: "Languages & Frameworks",
     icon: <Code className="w-6 h-6" />,
-    skills: ["Svelte", "Sveltekit", "Prisma ORM", "PostgreSQL", "Amazon Web Services (AWS)", "Ruby on Rails", "React.js", "Ruby", "SQL", "Tailwind CSS", "Figma (Software)", "GitHub", "Git"],
+    skills: ["TypeScript", "Svelte", "SvelteKit", "React.js", "Ruby", "Ruby on Rails", "SQL"],
     color: "from-blue-500 to-cyan-500"
   },
   {
-    title: "Interpersonal Skills",
-    icon: <Users className="w-6 h-6" />,
-    skills: ["Team Management"],
-    color: "from-green-500 to-emerald-500"
+    title: "Tools & Infrastructure",
+    icon: <Database className="w-6 h-6" />,
+    skills: ["Prisma ORM", "PostgreSQL", "Amazon Web Services (AWS)", "Vercel", "Stripe", "OAuth 2.1", "Tailwind CSS", "Figma", "Git", "GitHub"],
+    color: "from-purple-500 to-violet-500"
   },
   {
-    title: "Other Skills",
-    icon: <Database className="w-6 h-6" />,
-    skills: ["Langchain", "Vector Databases"],
-    color: "from-purple-500 to-violet-500"
+    title: "Business",
+    icon: <Users className="w-6 h-6" />,
+    skills: ["Product Management", "Enterprise Sales & Demos", "Customer Success", "Marketing", "Team Management"],
+    color: "from-green-500 to-emerald-500"
   }
 ];
 

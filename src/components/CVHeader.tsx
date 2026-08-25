@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Linkedin, Github, ChevronDown } from 'lucide-react';
+import { Mail, Linkedin, Github, ChevronDown, FileDown } from 'lucide-react';
 import { EyeTrackingPortrait } from './EyeTrackingPortrait';
 import { LiquidGlassCard } from './LiquidGlassCard';
 import { Sparkles } from './Sparkles';
@@ -138,6 +138,24 @@ export function CVHeader() {
               label="GitHub"
               href="https://github.com/Pascaltib"
             />
+            <LiquidGlassCard
+              draggable={true}
+              blurIntensity="sm"
+              shadowIntensity="md"
+              glowIntensity="sm"
+              borderRadius="12px"
+              className=""
+            >
+              <a
+                href="/cv/Pascal_Tiberghien_CV.pdf"
+                download="Pascal_Tiberghien_CV.pdf"
+                title="Download CV"
+                className="group flex items-center justify-center gap-2 p-3 relative z-30"
+              >
+                <FileDown className="w-5 h-5 text-primary/80 group-hover:text-primary transition-colors" />
+                <span className="text-sm text-primary/80 group-hover:text-primary transition-colors whitespace-nowrap">Download CV</span>
+              </a>
+            </LiquidGlassCard>
           </div>
         </div>
 
