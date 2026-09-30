@@ -11,6 +11,7 @@ import { useMusicPlayback } from './ipod/music-playback-context';
 export function CVHeader() {
   const [showScrollButton, setShowScrollButton] = useState(true);
   const [maxDistance, setMaxDistance] = useState(1000);
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   // Responsive maxDistance for eye tracking based on screen width
   useEffect(() => {
@@ -42,7 +43,7 @@ export function CVHeader() {
       setShowScrollButton(scrollPosition < headerHeight * 0.8);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Check initial position
 
     return () => window.removeEventListener('scroll', handleScroll);
@@ -88,9 +89,12 @@ export function CVHeader() {
       </div> */}
 
       {/* Original right CRT monitor */}
-      <div className="hidden lg:block fixed right-10 2xl:right-20 bottom-20 z-50">
-        <RetroComputer videoSrc="/cv/dance_color_500_30fps.mp4" />
-      </div>
+      {/* Only mount on desktop so phones don't download and decode the video */}
+      {isDesktop && (
+        <div className="fixed right-10 2xl:right-20 bottom-20 z-50">
+          <RetroComputer videoSrc="/cv/dance_color_500_30fps.mp4" />
+        </div>
+      )}
 
       <div className="relative z-10 px-0 md:px-16 flex flex-col gap-12 h-dvh">
         <div className="max-w-5xl mx-auto flex flex-col justify-center items-center grow">
@@ -195,6 +199,20 @@ export function CVHeader() {
       </div>
     </div>
   );
+}
+
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const onChange = () => setMatches(mql.matches);
+    onChange();
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, [query]);
+
+  return matches;
 }
 
 function ContactItem({ icon, label, href }: {

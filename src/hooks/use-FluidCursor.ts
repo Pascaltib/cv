@@ -7,7 +7,7 @@ const useFluidCursor = () => {
 
     let config = {
         SIM_RESOLUTION: 128,
-        DYE_RESOLUTION: 1440,
+        DYE_RESOLUTION: 1024,
         CAPTURE_RESOLUTION: 512,
         DENSITY_DISSIPATION: 3.5,
         VELOCITY_DISSIPATION: 2,
@@ -902,6 +902,9 @@ const useFluidCursor = () => {
 
     let lastUpdateTime = Date.now();
     let colorUpdateTimer = 0.0;
+    const IDLE_TIMEOUT_MS = 3000;
+    let lastInputTime = 0;
+    let running = false;
 
     function update() {
         const dt = calcDeltaTime();
@@ -911,6 +914,19 @@ const useFluidCursor = () => {
         applyInputs();
         step(dt);
         render(null);
+        // Stop simulating once the dye has faded out; pointer input wakes it back up.
+        if (performance.now() - lastInputTime > IDLE_TIMEOUT_MS) {
+            running = false;
+            return;
+        }
+        requestAnimationFrame(update);
+    }
+
+    function wake() {
+        lastInputTime = performance.now();
+        if (running) return;
+        running = true;
+        lastUpdateTime = Date.now();
         requestAnimationFrame(update);
     }
 
@@ -1132,6 +1148,7 @@ const useFluidCursor = () => {
         let posY = scaleByPixelRatio(e.clientY);
         updatePointerDownData(pointer, -1, posX, posY);
         clickSplat(pointer);
+        wake();
     });
 
     document.body.addEventListener('mousemove', function handleFirstMouseMove(e) {
@@ -1140,7 +1157,7 @@ const useFluidCursor = () => {
         let posY = scaleByPixelRatio(e.clientY);
         let color = generateColor();
 
-        update();
+        wake();
         updatePointerMoveData(pointer, posX, posY, color);
 
         // Remove this event listener after the first mousemove event
@@ -1154,6 +1171,7 @@ const useFluidCursor = () => {
         let color = pointer.color;
 
         updatePointerMoveData(pointer, posX, posY, color);
+        wake();
     });
 
     document.body.addEventListener(
@@ -1166,7 +1184,7 @@ const useFluidCursor = () => {
                 let posX = scaleByPixelRatio(touches[i].clientX);
                 let posY = scaleByPixelRatio(touches[i].clientY);
 
-                update();
+                wake();
                 updatePointerDownData(pointer, touches[i].identifier, posX, posY);
             }
 
@@ -1195,6 +1213,7 @@ const useFluidCursor = () => {
                 let posY = scaleByPixelRatio(touches[i].clientY);
                 updatePointerMoveData(pointer, posX, posY, pointer.color);
             }
+            wake();
         },
         false
     );
@@ -1313,7 +1332,8 @@ const useFluidCursor = () => {
     }
 
     function scaleByPixelRatio(input) {
-        const pixelRatio = window.devicePixelRatio || 1;
+        // The fluid is soft by nature; rendering it at retina resolution costs 4x for no visible gain.
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 1);
         return Math.floor(input * pixelRatio);
     }
 

@@ -13,7 +13,7 @@ export function SummarySection() {
       setShowScrollButton(scrollPosition < summaryHeight * 0.8);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll(); // Check initial position
 
     return () => window.removeEventListener('scroll', handleScroll);

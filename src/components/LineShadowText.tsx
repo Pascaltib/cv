@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { motion, MotionProps } from "motion/react"
 import { cn } from "./ui/utils"
 
@@ -18,7 +19,7 @@ export function LineShadowText({
     as: Component = "span",
     ...props
 }: LineShadowTextProps) {
-    const MotionComponent = motion.create(Component)
+    const MotionComponent = useMemo(() => motion.create(Component), [Component])
     const content = typeof children === "string" ? children : null
 
     if (!content) {

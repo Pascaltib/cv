@@ -28,6 +28,7 @@ export function EyeTrackingPortrait({
 
         let lastFrameTime = 0;
         let isNearVideo = false;
+        let lastFrameIndex = -1;
 
         const handlePointerMove = (e: PointerEvent) => {
             // Throttle updates to match FPS
@@ -55,6 +56,7 @@ export function EyeTrackingPortrait({
                 // Reset to center when too far
                 if (isNearVideo) {
                     video.currentTime = (Y_STEPS * X_STEPS / 2) / FPS; // Center frame
+                    lastFrameIndex = -1;
                     isNearVideo = false;
                 }
                 return;
@@ -72,6 +74,8 @@ export function EyeTrackingPortrait({
 
             // Calculate frame and seek video
             const frameIndex = yIndex * X_STEPS + xIndex;
+            if (frameIndex === lastFrameIndex) return;
+            lastFrameIndex = frameIndex;
             video.currentTime = frameIndex / FPS;
         };
 
@@ -79,7 +83,7 @@ export function EyeTrackingPortrait({
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         if (!isMobile) {
-            document.addEventListener('pointermove', handlePointerMove);
+            document.addEventListener('pointermove', handlePointerMove, { passive: true });
         }
 
         return () => {

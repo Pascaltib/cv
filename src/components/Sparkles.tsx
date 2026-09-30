@@ -60,7 +60,7 @@ export function Sparkles({
             enable: false,
             zIndex: 1,
         },
-        fpsLimit: 300,
+        fpsLimit: 60,
 
         interactivity: {
             events: {
