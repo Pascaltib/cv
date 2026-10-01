@@ -61,7 +61,7 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[200] flex flex-col bg-[#0b0618]/85 backdrop-blur-sm">
       {/* top bar */}
-      <div className="flex items-center justify-between px-5 py-4 md:px-8">
+      <div className="relative z-[60] flex items-center justify-between px-5 py-4 md:px-8">
         <div className="font-mono text-xs uppercase tracking-[0.3em] text-[#ffbf00]">
           ● in flight · {places.length} stops
         </div>
@@ -90,7 +90,7 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
 
         {/* story panel: side sheet on desktop, bottom sheet on phones */}
         {selected && (
-          <aside className="absolute inset-x-0 bottom-0 max-h-[70%] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#0b0618]/95 p-6 shadow-[0_-20px_60px_rgba(0,0,0,0.6)] md:inset-y-6 md:left-auto md:right-6 md:max-h-none md:w-[380px] md:rounded-3xl md:border">
+          <aside className="absolute inset-x-0 bottom-0 z-[60] max-h-[70%] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#0b0618]/95 p-6 shadow-[0_-20px_60px_rgba(0,0,0,0.6)] md:inset-y-6 md:left-auto md:right-6 md:max-h-none md:w-[380px] md:rounded-3xl md:border">
             <button
               onClick={() => setSelected(null)}
               aria-label="Close story"
@@ -125,8 +125,20 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
             </p>
             {selected.images && selected.images.length > 0 && (
               <div className="mt-5 grid grid-cols-2 gap-2">
-                {selected.images.map((src) => (
-                  <img key={src} src={src} alt="" loading="lazy" className="aspect-square w-full rounded-xl object-cover" />
+                {selected.images.map((image) => (
+                  <figure key={image.src} className="group relative overflow-hidden rounded-xl">
+                    <img
+                      src={image.src}
+                      alt={image.caption ?? ''}
+                      loading="lazy"
+                      className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    {image.caption && (
+                      <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pb-1.5 pt-6 text-[11px] leading-tight text-white/90">
+                        {image.caption}
+                      </figcaption>
+                    )}
+                  </figure>
                 ))}
               </div>
             )}

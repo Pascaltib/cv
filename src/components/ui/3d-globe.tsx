@@ -219,6 +219,8 @@ function Marker({
           transform
           center
           sprite
+          // Keep markers below the overlay's own chrome (story panel, close button).
+          zIndexRange={[50, 0]}
           // Render the image large and scale it down, so it stays sharp when the camera zooms in.
           // Apparent size = MARKER_PX * distanceFactor; markerSize (world units) sets that product.
           distanceFactor={((marker.size ?? defaultSize) * MARKER_PX_PER_UNIT) / MARKER_PX}
