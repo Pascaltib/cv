@@ -84,6 +84,11 @@ const DEFAULT_EARTH_TEXTURE =
 const DEFAULT_BUMP_TEXTURE =
   "https://unpkg.com/three-globe@2.31.0/example/img/earth-topology.png";
 
+// Marker images are rendered at this pixel size and scaled with a transform.
+const MARKER_PX = 160;
+// How many apparent pixels one unit of markerSize is worth (0.14 ≈ the old 8px × distanceFactor 10 look).
+const MARKER_PX_PER_UNIT = 570;
+
 // ============================================================================
 // Utility Functions
 // ============================================================================
@@ -214,7 +219,9 @@ function Marker({
           transform
           center
           sprite
-          distanceFactor={10}
+          // Render the image large and scale it down, so it stays sharp when the camera zooms in.
+          // Apparent size = MARKER_PX * distanceFactor; markerSize (world units) sets that product.
+          distanceFactor={((marker.size ?? defaultSize) * MARKER_PX_PER_UNIT) / MARKER_PX}
           style={{
             pointerEvents: isVisible ? "auto" : "none",
             opacity: isVisible ? 1 : 0,
@@ -227,8 +234,8 @@ function Marker({
               hovered && "scale-125 shadow-xl ring-1 ring-white/50",
             )}
             style={{
-              width: "8px",
-              height: "8px",
+              width: `${MARKER_PX}px`,
+              height: `${MARKER_PX}px`,
             }}
             onMouseEnter={handlePointerEnter}
             onMouseLeave={handlePointerLeave}
