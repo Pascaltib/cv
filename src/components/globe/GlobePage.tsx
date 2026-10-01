@@ -50,7 +50,7 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
       pointLightIntensity: 2.2,
       autoRotateSpeed: 0.35,
       enableZoom: true,
-      minDistance: 2.35,
+      minDistance: 2.6,
       maxDistance: 12,
       markerSize: lite ? 34 : 40,
       initialRotation: { x: 0.2, y: -0.4 },
