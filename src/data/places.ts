@@ -1517,6 +1517,17 @@ export const places: Place[] = [
       { src: '/cv/places/gulmarg-4.jpg', caption: 'Gulmarg village' },
     ],
   },
+  {
+    id: 'singapore',
+    city: 'Singapore',
+    country: 'Singapore',
+    countryCode: 'sg',
+    lat: 1.3521,
+    lng: 103.8198,
+    kind: 'visited',
+    when: '2012',
+    story: 'I went to Singapore in 2012 for a Model United Nations conference.',
+  },
 
 ];
 
