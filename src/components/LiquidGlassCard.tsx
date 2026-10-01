@@ -2,6 +2,7 @@
 'use client';
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
+import { useLiteMode } from '@/hooks/use-media-query';
 
 import { ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -41,6 +42,9 @@ export const LiquidGlassCard = ({
     ...props
 }: LiquidGlassCardProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    // Dragging a card on a phone hijacks scrolling, so cards are static in lite mode.
+    const lite = useLiteMode();
+    if (lite) draggable = false;
 
     const handleToggleExpansion = (e: {
         target: { closest: (arg0: string) => any };
@@ -149,7 +153,7 @@ export const LiquidGlassCard = ({
             >
                 {/* Bend Layer (Backdrop blur with distortion) */}
                 <div
-                    className={`absolute inset-0 ${blurClasses[blurIntensity]} z-0`}
+                    className={`absolute inset-0 ${blurClasses[blurIntensity]} bg-[#0b0618]/70 z-0`}
                     style={{ borderRadius }}
                 />
 

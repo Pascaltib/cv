@@ -98,7 +98,7 @@ export function ExperienceSection() {
     <div className="py-16 px-8 md:px-16 relative">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl mb-4 text-white">
+          <h2 className="text-3xl md:text-4xl mb-4 text-white text-glow">
             Professional Experience
           </h2>
           <div className="w-16 h-1 bg-white mx-auto rounded-full"></div>

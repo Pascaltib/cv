@@ -11,6 +11,7 @@ interface ClickWheelProps {
   onNextUp?: () => void
   onPreviousDown?: () => void
   onPreviousUp?: () => void
+  onSkipCancel?: () => void
   onPlayPause: () => void
   onMenu: () => void
   onSelect: () => void
@@ -29,6 +30,7 @@ export function ClickWheel({
   onNextUp,
   onPreviousDown,
   onPreviousUp,
+  onSkipCancel,
   onPlayPause,
   onMenu,
   onSelect,
@@ -176,7 +178,7 @@ export function ClickWheel({
           <button
             onMouseDown={onPreviousDown}
             onMouseUp={onPreviousUp}
-            onMouseLeave={onPreviousUp}
+            onMouseLeave={onSkipCancel}
             onTouchStart={onPreviousDown}
             onTouchEnd={onPreviousUp}
             className="absolute left-6 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-20 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"
@@ -188,7 +190,7 @@ export function ClickWheel({
           <button
             onMouseDown={onNextDown}
             onMouseUp={onNextUp}
-            onMouseLeave={onNextUp}
+            onMouseLeave={onSkipCancel}
             onTouchStart={onNextDown}
             onTouchEnd={onNextUp}
             className="absolute right-6 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors z-20 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]"

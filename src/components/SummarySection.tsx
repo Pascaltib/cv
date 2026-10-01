@@ -54,7 +54,7 @@ export function SummarySection() {
     <div className="pb-16 px-8 md:px-16 relative mt-12 min-h-dvh md:h-dvh flex flex-col justify-between gap-12">
       <div className="max-w-4xl mx-auto relative z-10 grow flex flex-col justify-center">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl mb-4 text-white">
+          <h2 className="text-3xl md:text-4xl mb-4 text-white text-glow">
             Summary
           </h2>
           <div className="w-16 h-1 bg-white mx-auto rounded-full"></div>

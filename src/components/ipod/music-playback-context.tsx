@@ -4,6 +4,7 @@ import {
   useState,
   useRef,
   useEffect,
+  useCallback,
   type ReactNode,
   type MutableRefObject,
   type Dispatch,
@@ -27,6 +28,8 @@ interface MusicPlaybackContextType {
   setSelectedIndex: Dispatch<SetStateAction<number>>
   isPlaying: boolean
   setIsPlaying: Dispatch<SetStateAction<boolean>>
+  playNext: () => void
+  playPrevious: () => void
   volume: number
   setVolume: (volume: number) => void
   playerRef: MutableRefObject<any>
@@ -41,6 +44,22 @@ declare global {
   }
 }
 
+// Flat play order across the whole library so next/previous cross album and artist boundaries.
+interface QueueEntry {
+  artist: Artist
+  album: Album
+  song: Song
+}
+
+const playQueue: QueueEntry[] = musicLibrary.flatMap((artist) =>
+  artist.albums.flatMap((album) => album.songs.map((song) => ({ artist, album, song })))
+)
+
+function queueIndexOf(song: Song | null) {
+  if (!song) return -1
+  return playQueue.findIndex((entry) => entry.song.id === song.id)
+}
+
 export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
   const [navigation, setNavigation] = useState<NavigationState>({
     level: "artists",
@@ -49,92 +68,57 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
     selectedSong: null,
   })
   const [selectedIndex, setSelectedIndex] = useState(0)
+  // isPlaying is the user's intent. It drives the player; the player never overrides it
+  // except when a track ends, so a stray buffering/playing event can't undo a pause press.
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(50)
   const playerRef = useRef<any>(null)
   const [playerReady, setPlayerReady] = useState(false)
-  const previousSongRef = useRef<Song | null>(null)
-  const isPlayingRef = useRef(isPlaying)
-  const isLoadingRef = useRef(false)
+  const loadedSongIdRef = useRef<string | null>(null)
   const navigationRef = useRef(navigation)
 
   useEffect(() => {
     navigationRef.current = navigation
   }, [navigation])
 
-  useEffect(() => {
-    isPlayingRef.current = isPlaying
-  }, [isPlaying])
-
-  const playNextSong = () => {
+  const jumpTo = useCallback((entry: QueueEntry) => {
     const nav = navigationRef.current
-    if (!nav.selectedSong || !nav.selectedAlbum || !nav.selectedArtist) return
-
-    const artistIndex = musicLibrary.findIndex((a) => a.name === nav.selectedArtist!.name)
-    const albumIndex = nav.selectedArtist!.albums.findIndex((a) => a.name === nav.selectedAlbum!.name)
-    const songIndex = nav.selectedAlbum!.songs.findIndex((s) => s.id === nav.selectedSong!.id)
-
-    isPlayingRef.current = true
-
-    if (songIndex < nav.selectedAlbum!.songs.length - 1) {
-      const nextSong = nav.selectedAlbum!.songs[songIndex + 1]
-      setNavigation({ ...nav, selectedSong: nextSong })
-      setIsPlaying(true)
-      return
-    }
-
-    if (albumIndex < nav.selectedArtist!.albums.length - 1) {
-      const nextAlbum = nav.selectedArtist!.albums[albumIndex + 1]
-      const nextSong = nextAlbum.songs[0]
-      setNavigation({ ...nav, selectedAlbum: nextAlbum, selectedSong: nextSong })
-      setIsPlaying(true)
-      return
-    }
-
-    if (artistIndex < musicLibrary.length - 1) {
-      const nextArtist = musicLibrary[artistIndex + 1]
-      const nextAlbum = nextArtist.albums[0]
-      const nextSong = nextAlbum.songs[0]
-      setNavigation({
-        level: "nowPlaying",
-        selectedArtist: nextArtist,
-        selectedAlbum: nextAlbum,
-        selectedSong: nextSong,
-      })
-      setIsPlaying(true)
-      return
-    }
-
-    const firstArtist = musicLibrary[0]
-    const firstAlbum = firstArtist.albums[0]
-    const firstSong = firstAlbum.songs[0]
     setNavigation({
-      level: "nowPlaying",
-      selectedArtist: firstArtist,
-      selectedAlbum: firstAlbum,
-      selectedSong: firstSong,
+      level: nav.level === "nowPlaying" ? "nowPlaying" : nav.level,
+      selectedArtist: entry.artist,
+      selectedAlbum: entry.album,
+      selectedSong: entry.song,
     })
     setIsPlaying(true)
-  }
+  }, [])
 
-  useEffect(() => {
-    if (window.YT && window.YT.Player) {
-      createPlayer()
+  const playNext = useCallback(() => {
+    const index = queueIndexOf(navigationRef.current.selectedSong)
+    if (index === -1 || playQueue.length === 0) return
+    jumpTo(playQueue[(index + 1) % playQueue.length])
+  }, [jumpTo])
+
+  const playPrevious = useCallback(() => {
+    const index = queueIndexOf(navigationRef.current.selectedSong)
+    if (index === -1 || playQueue.length === 0) return
+    // Classic behaviour: restart the track if it's been playing for a bit, otherwise go back.
+    const current = playerRef.current?.getCurrentTime?.()
+    if (typeof current === "number" && current > 3) {
+      try {
+        playerRef.current.seekTo(0, true)
+      } catch { /* player not ready */ }
+      setIsPlaying(true)
       return
     }
+    jumpTo(playQueue[(index - 1 + playQueue.length) % playQueue.length])
+  }, [jumpTo])
 
-    const existingScript = document.querySelector('script[src="https://www.youtube.com/iframe_api"]')
-    if (!existingScript) {
-      const tag = document.createElement("script")
-      tag.src = "https://www.youtube.com/iframe_api"
-      const firstScriptTag = document.getElementsByTagName("script")[0]
-      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
-    }
+  const playNextRef = useRef(playNext)
+  useEffect(() => {
+    playNextRef.current = playNext
+  }, [playNext])
 
-    window.onYouTubeIframeAPIReady = () => {
-      createPlayer()
-    }
-
+  useEffect(() => {
     function createPlayer() {
       const container = document.getElementById("youtube-player")
       if (!container || playerRef.current) return
@@ -151,65 +135,58 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         events: {
           onReady: () => setPlayerReady(true),
           onStateChange: (event: any) => {
-            if (event.data === window.YT.PlayerState.PLAYING) {
-              isLoadingRef.current = false
-              isPlayingRef.current = true
-              setIsPlaying(true)
-            } else if (event.data === window.YT.PlayerState.PAUSED) {
-              if (!isLoadingRef.current) {
-                isPlayingRef.current = false
-                setIsPlaying(false)
-              }
-              isLoadingRef.current = false
-            } else if (event.data === window.YT.PlayerState.ENDED) {
-              isLoadingRef.current = false
-              isPlayingRef.current = false
-              setIsPlaying(false)
-              playNextSong()
+            if (event.data === window.YT.PlayerState.ENDED) {
+              playNextRef.current()
             }
-          },
-          onError: () => {
-            isLoadingRef.current = false
           },
         },
       })
     }
+
+    if (window.YT && window.YT.Player) {
+      createPlayer()
+      return
+    }
+
+    const existingScript = document.querySelector('script[src="https://www.youtube.com/iframe_api"]')
+    if (!existingScript) {
+      const tag = document.createElement("script")
+      tag.src = "https://www.youtube.com/iframe_api"
+      const firstScriptTag = document.getElementsByTagName("script")[0]
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
+    }
+
+    window.onYouTubeIframeAPIReady = () => {
+      createPlayer()
+    }
   }, [])
 
+  // Keep the player in sync with (selectedSong, isPlaying). Loading a new song and
+  // toggling playback are handled in one place so they can't race each other.
   useEffect(() => {
-    if (playerReady && playerRef.current && navigation.selectedSong) {
-      const songChanged = previousSongRef.current?.id !== navigation.selectedSong.id
-      if (songChanged && !isLoadingRef.current) {
-        previousSongRef.current = navigation.selectedSong
-        isLoadingRef.current = true
-        try {
-          if (isPlayingRef.current) {
-            playerRef.current.loadVideoById({ videoId: navigation.selectedSong.id, startSeconds: 0 })
-          } else {
-            playerRef.current.cueVideoById({ videoId: navigation.selectedSong.id, startSeconds: 0 })
-          }
-        } catch {
-          isLoadingRef.current = false
-        }
-      }
-    }
-  }, [navigation.selectedSong, playerReady])
+    const player = playerRef.current
+    const song = navigation.selectedSong
+    if (!playerReady || !player || !song) return
 
-  useEffect(() => {
-    if (playerReady && playerRef.current && navigation.selectedSong) {
-      if (!isLoadingRef.current) {
-        try {
-          if (isPlaying) {
-            playerRef.current.playVideo()
-          } else {
-            playerRef.current.pauseVideo()
-          }
-        } catch {
-          // Player not ready yet
+    try {
+      if (loadedSongIdRef.current !== song.id) {
+        loadedSongIdRef.current = song.id
+        if (isPlaying) {
+          player.loadVideoById({ videoId: song.id, startSeconds: 0 })
+        } else {
+          player.cueVideoById({ videoId: song.id, startSeconds: 0 })
         }
+        return
       }
+      if (isPlaying) {
+        player.playVideo()
+      } else {
+        player.pauseVideo()
+      }
+    } catch {
+      // Player not ready yet
     }
-  }, [isPlaying, playerReady, navigation.selectedSong])
+  }, [navigation.selectedSong, isPlaying, playerReady])
 
   useEffect(() => {
     if (playerReady && playerRef.current) {
@@ -226,12 +203,16 @@ export function MusicPlaybackProvider({ children }: { children: ReactNode }) {
         setSelectedIndex,
         isPlaying,
         setIsPlaying,
+        playNext,
+        playPrevious,
         volume,
         setVolume,
         playerRef,
       }}
     >
-      <div id="youtube-player" style={{ display: "none" }} />
+      <div style={{ display: "none" }}>
+        <div id="youtube-player" />
+      </div>
       {children}
     </MusicPlaybackContext.Provider>
   )

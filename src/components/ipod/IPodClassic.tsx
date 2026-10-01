@@ -6,8 +6,19 @@ import { useMusicPlayback } from "./music-playback-context"
 import { useClickWheelSound } from "./ClickWheelSoundProvider"
 
 export function IPodClassic() {
-  const { navigation, setNavigation, selectedIndex, setSelectedIndex, isPlaying, setIsPlaying, volume, setVolume, playerRef } =
-    useMusicPlayback()
+  const {
+    navigation,
+    setNavigation,
+    selectedIndex,
+    setSelectedIndex,
+    isPlaying,
+    setIsPlaying,
+    playNext,
+    playPrevious,
+    volume,
+    setVolume,
+    playerRef,
+  } = useMusicPlayback()
 
   const { playClick } = useClickWheelSound()
 
@@ -24,6 +35,8 @@ export function IPodClassic() {
   const seekHoldTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const seekInterval = useRef<ReturnType<typeof setInterval> | null>(null)
   const isSeeking = useRef(false)
+  // Which skip button is currently held, so a mouseleave can cancel without acting as a tap.
+  const heldButton = useRef<"next" | "previous" | null>(null)
   const SEEK_HOLD_DELAY = 500
   const SEEK_STEP_SECONDS = 5
   const SEEK_INTERVAL_MS = 300
@@ -175,6 +188,7 @@ export function IPodClassic() {
   }, [])
 
   const handleNextDown = useCallback(() => {
+    heldButton.current = "next"
     isSeeking.current = false
     clearSeekTimers()
     seekHoldTimer.current = setTimeout(() => {
@@ -188,24 +202,19 @@ export function IPodClassic() {
   }, [clearSeekTimers, seekBy])
 
   const handleNextUp = useCallback(() => {
+    if (heldButton.current !== "next") return
+    heldButton.current = null
     clearSeekTimers()
     if (!isSeeking.current) {
       playClick()
       showUI()
-      if (navigation.selectedAlbum && navigation.selectedSong) {
-        const songs = navigation.selectedAlbum.songs
-        const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
-        if (currentIndex < songs.length - 1) {
-          const nextSong = songs[currentIndex + 1]
-          setNavigation({ ...navigation, selectedSong: nextSong })
-          setIsPlaying(true)
-        }
-      }
+      playNext()
     }
     isSeeking.current = false
-  }, [clearSeekTimers, playClick, navigation, setNavigation, setIsPlaying])
+  }, [clearSeekTimers, playClick, playNext])
 
   const handlePreviousDown = useCallback(() => {
+    heldButton.current = "previous"
     isSeeking.current = false
     clearSeekTimers()
     seekHoldTimer.current = setTimeout(() => {
@@ -219,22 +228,23 @@ export function IPodClassic() {
   }, [clearSeekTimers, seekBy])
 
   const handlePreviousUp = useCallback(() => {
+    if (heldButton.current !== "previous") return
+    heldButton.current = null
     clearSeekTimers()
     if (!isSeeking.current) {
       playClick()
       showUI()
-      if (navigation.selectedAlbum && navigation.selectedSong) {
-        const songs = navigation.selectedAlbum.songs
-        const currentIndex = songs.findIndex((s) => s.id === navigation.selectedSong?.id)
-        if (currentIndex > 0) {
-          const prevSong = songs[currentIndex - 1]
-          setNavigation({ ...navigation, selectedSong: prevSong })
-          setIsPlaying(true)
-        }
-      }
+      playPrevious()
     }
     isSeeking.current = false
-  }, [clearSeekTimers, playClick, navigation, setNavigation, setIsPlaying])
+  }, [clearSeekTimers, playClick, playPrevious])
+
+  // Pointer left the button mid-press: stop seeking but don't treat it as a tap.
+  const handleSkipCancel = useCallback(() => {
+    heldButton.current = null
+    isSeeking.current = false
+    clearSeekTimers()
+  }, [clearSeekTimers])
 
   useEffect(() => {
     return () => clearSeekTimers()
@@ -383,6 +393,7 @@ export function IPodClassic() {
                   onNextUp={handleNextUp}
                   onPreviousDown={handlePreviousDown}
                   onPreviousUp={handlePreviousUp}
+                  onSkipCancel={handleSkipCancel}
                   onPlayPause={handlePlayPause}
                   onMenu={handleMenu}
                   onSelect={handleSelect}

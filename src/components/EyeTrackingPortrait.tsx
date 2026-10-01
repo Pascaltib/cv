@@ -2,6 +2,9 @@ import React, { useEffect, useRef } from 'react';
 
 interface EyeTrackingPortraitProps {
     videoSrc: string;
+    posterSrc?: string;
+    /** Render the poster only; no video download, no tracking. */
+    staticImage?: boolean;
     size?: number;
     maxDistance?: number;
     className?: string;
@@ -9,6 +12,8 @@ interface EyeTrackingPortraitProps {
 
 export function EyeTrackingPortrait({
     videoSrc,
+    posterSrc,
+    staticImage = false,
     size = 300,
     maxDistance = 500,
     className = ''
@@ -24,7 +29,7 @@ export function EyeTrackingPortrait({
         const video = videoRef.current;
         const container = containerRef.current;
 
-        if (!video || !container) return;
+        if (!video || !container || staticImage) return;
 
         let lastFrameTime = 0;
         let isNearVideo = false;
@@ -89,7 +94,7 @@ export function EyeTrackingPortrait({
         return () => {
             document.removeEventListener('pointermove', handlePointerMove);
         };
-    }, [maxDistance]);
+    }, [maxDistance, staticImage]);
 
     return (
         <div
@@ -102,15 +107,25 @@ export function EyeTrackingPortrait({
 
             {/* Main container */}
             <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white/30 shadow-2xl backdrop-blur-sm">
-                <video
-                    ref={videoRef}
-                    src={videoSrc}
-                    muted
-                    playsInline
-                    preload="auto"
-                    className="w-full h-full object-cover"
-                    style={{ objectFit: 'cover' }}
-                />
+                {staticImage && posterSrc ? (
+                    <img
+                        src={posterSrc}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                    />
+                ) : (
+                    <video
+                        ref={videoRef}
+                        src={videoSrc}
+                        poster={posterSrc}
+                        muted
+                        playsInline
+                        preload="auto"
+                        className="w-full h-full object-cover"
+                        style={{ objectFit: 'cover' }}
+                    />
+                )}
             </div>
 
             {/* Subtle ring decoration */}

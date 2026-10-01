@@ -12,6 +12,8 @@ const COLOR_B = '#ffbf00';
 const COLOR_C = '#0aa9ff';
 const BLEND_MID = 0.23;
 const MAX_DPR = 1.5;
+// Glyph brightness. Below 1 darkens the pattern so the content above it stays legible.
+const GLYPH_INTENSITY = 0.55;
 
 const VERTEX = `
 attribute vec2 aPos;
@@ -28,6 +30,7 @@ uniform float uCell;
 uniform float uVideoAspect;
 uniform float uCharCount;
 uniform float uAtlasSize;
+uniform float uIntensity;
 
 void main() {
   vec2 uv = vec2(gl_FragCoord.x / uRes.x, 1.0 - gl_FragCoord.y / uRes.y);
@@ -56,7 +59,7 @@ void main() {
     gl_FragColor = vec4(0.0);
     return;
   }
-  vec3 color = glyph * pow(lut.rgb, vec3(2.2));
+  vec3 color = glyph * pow(lut.rgb, vec3(2.2)) * uIntensity;
   gl_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }
 `;
@@ -229,6 +232,7 @@ export function AsciiWebcamBackground() {
     gl.uniform1i(uniform('uLut'), 2);
     gl.uniform1f(uniform('uCharCount'), CHARACTERS.length);
     gl.uniform1f(uniform('uAtlasSize'), atlasSize);
+    gl.uniform1f(uniform('uIntensity'), GLYPH_INTENSITY);
     const uRes = uniform('uRes');
     const uCell = uniform('uCell');
     const uVideoAspect = uniform('uVideoAspect');
@@ -312,18 +316,56 @@ export function AsciiWebcamBackground() {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <>
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 0,
+          backgroundColor: BACKGROUND,
+          pointerEvents: 'none',
+        }}
+      />
+      <Vignette />
+    </>
+  );
+}
+
+// Darkens the edges and the centre column slightly so white text reads over the pattern.
+function Vignette() {
+  return (
+    <div
       aria-hidden="true"
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
+        inset: 0,
         zIndex: 0,
-        backgroundColor: BACKGROUND,
         pointerEvents: 'none',
+        background:
+          'radial-gradient(ellipse 70% 60% at 50% 45%, rgba(10, 4, 30, 0.45) 0%, rgba(10, 4, 30, 0.7) 60%, rgba(5, 2, 16, 0.85) 100%)',
+      }}
+    />
+  );
+}
+
+// Lite-mode background: same palette, no camera, no WebGL.
+export function StaticBackground() {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+        backgroundColor: BACKGROUND,
+        backgroundImage:
+          'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 74, 212, 0.35), transparent 70%), radial-gradient(ellipse 60% 50% at 100% 100%, rgba(10, 169, 255, 0.18), transparent 70%), radial-gradient(ellipse 60% 40% at 0% 80%, rgba(255, 191, 0, 0.12), transparent 70%)',
       }}
     />
   );

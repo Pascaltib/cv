@@ -7,11 +7,12 @@ import { LineShadowText } from './LineShadowText';
 import { HyperText } from './HyperText';
 import WebcamPixelGrid from './ui/webcam-pixel-grid';
 import { useMusicPlayback } from './ipod/music-playback-context';
+import { useLiteMode } from '@/hooks/use-media-query';
 
 export function CVHeader() {
   const [showScrollButton, setShowScrollButton] = useState(true);
   const [maxDistance, setMaxDistance] = useState(1000);
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const lite = useLiteMode();
 
   // Responsive maxDistance for eye tracking based on screen width
   useEffect(() => {
@@ -90,7 +91,7 @@ export function CVHeader() {
 
       {/* Original right CRT monitor */}
       {/* Only mount on desktop so phones don't download and decode the video */}
-      {isDesktop && (
+      {!lite && (
         <div className="fixed right-10 2xl:right-20 bottom-20 z-50">
           <RetroComputer videoSrc="/cv/dance_color_500_30fps.mp4" />
         </div>
@@ -102,7 +103,7 @@ export function CVHeader() {
             <div className="text-center mb-12">
 
 
-              <h1 className="text-4xl md:text-7xl leading-none font-semibold tracking-tighter text-balance">
+              <h1 className="text-4xl md:text-7xl leading-none font-semibold tracking-tighter text-balance text-glow">
                 <LineShadowText className="italic" shadowColor={"white"}>
                   Pascal
                 </LineShadowText>
@@ -118,12 +119,14 @@ export function CVHeader() {
             <div className="flex justify-center">
               <EyeTrackingPortrait
                 videoSrc="/cv/pascal.mp4"
+                posterSrc="/cv/pascal-poster.jpg"
+                staticImage={lite}
                 size={250}
                 maxDistance={maxDistance}
                 className="transition-transform duration-300 hover:scale-105"
               />
             </div>
-            <HyperText className='mt-4'>Full Stack Developer</HyperText>
+            <HyperText className='mt-4 text-glow'>Full Stack Developer</HyperText>
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 w-fit max-w-full px-4 mt-4">
@@ -175,7 +178,7 @@ export function CVHeader() {
           </div>
 
           <Sparkles
-            density={1200}
+            density={lite ? 250 : 1200}
             mousemove={true}
             className='absolute inset-x-0 -mt-24 top-0 h-full w-full mask-[radial-gradient(50%_50%,white,transparent_55%)]'
           />
@@ -199,20 +202,6 @@ export function CVHeader() {
       </div>
     </div>
   );
-}
-
-function useMediaQuery(query: string) {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
-
-  useEffect(() => {
-    const mql = window.matchMedia(query);
-    const onChange = () => setMatches(mql.matches);
-    onChange();
-    mql.addEventListener('change', onChange);
-    return () => mql.removeEventListener('change', onChange);
-  }, [query]);
-
-  return matches;
 }
 
 function ContactItem({ icon, label, href }: {
