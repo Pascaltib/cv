@@ -48,7 +48,7 @@ export interface Globe3DConfig {
   maxDistance?: number;
   /** Initial rotation */
   initialRotation?: { x: number; y: number };
-  /** Marker default size */
+  /** Marker diameter in CSS pixels; markers keep this size on screen at every zoom level */
   markerSize?: number;
   /** Show wireframe overlay */
   showWireframe?: boolean;
@@ -84,11 +84,6 @@ const DEFAULT_EARTH_TEXTURE =
 const DEFAULT_BUMP_TEXTURE =
   "https://unpkg.com/three-globe@2.31.0/example/img/earth-topology.png";
 
-// Marker images are rendered at this pixel size and scaled with a transform.
-const MARKER_PX = 160;
-// How many apparent pixels one unit of markerSize is worth (0.14 ≈ the old 8px × distanceFactor 10 look).
-const MARKER_PX_PER_UNIT = 570;
-
 // ============================================================================
 // Utility Functions
 // ============================================================================
@@ -112,146 +107,249 @@ function latLngToVector3(
 }
 
 // ============================================================================
-// Marker Component (static - rotation handled by parent group)
+// Marker layer: screen-sized pins that cluster when they overlap on screen
 // ============================================================================
 
-interface MarkerProps {
-  marker: GlobeMarker;
+interface MarkerLayerProps {
+  markers: GlobeMarker[];
   radius: number;
-  defaultSize: number;
+  /** Marker diameter in CSS pixels; constant on screen regardless of zoom */
+  markerSize: number;
+  onClick?: (marker: GlobeMarker) => void;
+  onHover?: (marker: GlobeMarker | null) => void;
+  onClusterClick?: (direction: THREE.Vector3, members: GlobeMarker[]) => void;
+}
+
+interface MarkerPoint {
+  dir: THREE.Vector3;
+  surface: THREE.Vector3;
+  top: THREE.Vector3;
+}
+
+interface Cluster {
+  key: string;
+  members: number[];
+  direction: THREE.Vector3;
+}
+
+// Top of the pin line as a multiple of the globe radius
+const PIN_HEIGHT = 1.08;
+// Markers facing away from the camera beyond this are hidden
+const FACING_THRESHOLD = 0.15;
+
+function lineBetween(from: THREE.Vector3, to: THREE.Vector3) {
+  const center = from.clone().lerp(to, 0.5);
+  const direction = to.clone().sub(from).normalize();
+  const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+  return { center, quaternion, length: from.distanceTo(to) };
+}
+
+function MarkerLayer({ markers, radius, markerSize, onClick, onHover, onClusterClick }: MarkerLayerProps) {
+  const { camera, size } = useThree();
+  const [clusters, setClusters] = useState<Cluster[]>([]);
+  const signature = useRef("");
+  const frame = useRef(0);
+
+  const points = useMemo<MarkerPoint[]>(
+    () =>
+      markers.map((m) => {
+        const dir = latLngToVector3(m.lat, m.lng, 1);
+        return {
+          dir,
+          surface: dir.clone().multiplyScalar(radius * 1.001),
+          top: dir.clone().multiplyScalar(radius * PIN_HEIGHT),
+        };
+      }),
+    [markers, radius],
+  );
+
+  // Re-cluster about ten times a second. Projecting a hundred points is cheap; React updates are not,
+  // so state only changes when the grouping actually changes.
+  useFrame(() => {
+    if (frame.current++ % 6 !== 0) return;
+    const camDir = camera.position.clone().normalize();
+    const screen = points.map((p) => {
+      if (p.dir.dot(camDir) < FACING_THRESHOLD) return null;
+      const ndc = p.top.clone().project(camera);
+      return new THREE.Vector2(((ndc.x + 1) / 2) * size.width, ((1 - ndc.y) / 2) * size.height);
+    });
+    const threshold = markerSize * 1.15;
+    const assigned = new Array<boolean>(points.length).fill(false);
+    const next: Cluster[] = [];
+    for (let i = 0; i < points.length; i++) {
+      const si = screen[i];
+      if (assigned[i] || !si) continue;
+      const members = [i];
+      assigned[i] = true;
+      for (let j = i + 1; j < points.length; j++) {
+        const sj = screen[j];
+        if (assigned[j] || !sj) continue;
+        if (si.distanceTo(sj) < threshold) {
+          members.push(j);
+          assigned[j] = true;
+        }
+      }
+      const direction = members
+        .reduce((acc, k) => acc.add(points[k].dir), new THREE.Vector3())
+        .normalize();
+      next.push({ key: members.join("-"), members, direction });
+    }
+    const sig = next.map((c) => c.key).join("|");
+    if (sig !== signature.current) {
+      signature.current = sig;
+      setClusters(next);
+    }
+  });
+
+  return (
+    <group>
+      {/* Every place keeps a dot on the surface, even while folded into a cluster */}
+      {points.map((p, i) => (
+        <mesh key={`dot-${i}`} position={p.surface}>
+          <sphereGeometry args={[radius * 0.006, 8, 8]} />
+          <meshBasicMaterial color="#ef4444" />
+        </mesh>
+      ))}
+      {clusters.map((c) =>
+        c.members.length === 1 ? (
+          <SingleMarker
+            key={c.key}
+            marker={markers[c.members[0]]}
+            point={points[c.members[0]]}
+            size={markerSize}
+            onClick={onClick}
+            onHover={onHover}
+          />
+        ) : (
+          <ClusterMarker
+            key={c.key}
+            cluster={c}
+            markers={markers}
+            radius={radius}
+            size={markerSize}
+            onClick={onClusterClick}
+          />
+        ),
+      )}
+    </group>
+  );
+}
+
+interface SingleMarkerProps {
+  marker: GlobeMarker;
+  point: MarkerPoint;
+  size: number;
   onClick?: (marker: GlobeMarker) => void;
   onHover?: (marker: GlobeMarker | null) => void;
 }
 
-function Marker({
-  marker,
-  radius,
-  defaultSize,
-  onClick,
-  onHover,
-}: MarkerProps) {
+function SingleMarker({ marker, point, size, onClick, onHover }: SingleMarkerProps) {
   const [hovered, setHovered] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const groupRef = useRef<THREE.Group>(null);
-  const imageGroupRef = useRef<THREE.Group>(null);
-  const { camera } = useThree();
-
-  // Surface position (where the line starts)
-  const surfacePosition = useMemo(() => {
-    return latLngToVector3(marker.lat, marker.lng, radius * 1.001);
-  }, [marker.lat, marker.lng, radius]);
-
-  // Top of the line (where the image is) - positioned further out to prevent going inside globe
-  const topPosition = useMemo(() => {
-    return latLngToVector3(marker.lat, marker.lng, radius * 1.18);
-  }, [marker.lat, marker.lng, radius]);
-
-  const lineHeight = topPosition.distanceTo(surfacePosition);
-
-  // Check if marker is facing the camera
-  useFrame(() => {
-    if (!imageGroupRef.current) return;
-
-    // Get the world position of the image (the positioned element)
-    const worldPos = new THREE.Vector3();
-    imageGroupRef.current.getWorldPosition(worldPos);
-
-    // Direction from globe center (0,0,0) to marker
-    const markerDirection = worldPos.clone().normalize();
-
-    // Direction from globe center to camera
-    const cameraDirection = camera.position.clone().normalize();
-
-    // Dot product: positive means facing camera, negative means behind
-    const dot = markerDirection.dot(cameraDirection);
-
-    // Show marker only if it's facing the camera (stricter threshold)
-    setIsVisible(dot > 0.1);
-  });
-
-  const handlePointerEnter = useCallback(() => {
-    setHovered(true);
-    onHover?.(marker);
-  }, [marker, onHover]);
-
-  const handlePointerLeave = useCallback(() => {
-    setHovered(false);
-    onHover?.(null);
-  }, [onHover]);
-
-  const handleClick = useCallback(() => {
-    onClick?.(marker);
-  }, [marker, onClick]);
-
-  // Calculate line center and orientation
-  const { lineCenter, lineQuaternion } = useMemo(() => {
-    const center = surfacePosition.clone().lerp(topPosition, 0.5);
-
-    // Calculate rotation to align cylinder with the direction from surface to top
-    const direction = topPosition.clone().sub(surfacePosition).normalize();
-    const quaternion = new THREE.Quaternion();
-    quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
-
-    return { lineCenter: center, lineQuaternion: quaternion };
-  }, [surfacePosition, topPosition]);
+  const line = useMemo(() => lineBetween(point.surface, point.top), [point]);
+  const pixels = marker.size ?? size;
 
   return (
-    <group ref={groupRef} visible={isVisible}>
-      {/* Pin line from surface to image - properly oriented */}
-      <mesh position={lineCenter} quaternion={lineQuaternion}>
-        <cylinderGeometry args={[0.003, 0.003, lineHeight, 8]} />
-        <meshBasicMaterial
-          color={hovered ? "#ffffff" : "#94a3b8"}
-          transparent
-          opacity={hovered ? 0.9 : 0.6}
-        />
+    <group>
+      <mesh position={line.center} quaternion={line.quaternion}>
+        <cylinderGeometry args={[0.003, 0.003, line.length, 6]} />
+        <meshBasicMaterial color={hovered ? "#ffffff" : "#94a3b8"} transparent opacity={0.7} />
       </mesh>
-
-      {/* Pin point at the surface */}
-      <mesh position={surfacePosition} quaternion={lineQuaternion}>
-        <coneGeometry args={[0.015, 0.04, 8]} />
-        <meshBasicMaterial color={hovered ? "#f97316" : "#ef4444"} />
-      </mesh>
-
-      {/* Circular image at the top */}
-      <group ref={imageGroupRef} position={topPosition}>
-        <Html
-          transform
-          center
-          sprite
-          // Keep markers below the overlay's own chrome (story panel, close button).
-          zIndexRange={[50, 0]}
-          // Render the image large and scale it down, so it stays sharp when the camera zooms in.
-          // Apparent size = MARKER_PX * distanceFactor; markerSize (world units) sets that product.
-          distanceFactor={((marker.size ?? defaultSize) * MARKER_PX_PER_UNIT) / MARKER_PX}
-          style={{
-            pointerEvents: isVisible ? "auto" : "none",
-            opacity: isVisible ? 1 : 0,
-            transition: "opacity 0.15s ease-out",
-          }}
-        >
+      <group position={point.top}>
+        <Html center zIndexRange={[10, 0]}>
           <div
-            className={cn(
-              "cursor-pointer overflow-hidden rounded-full bg-neutral-900 shadow-lg transition-transform duration-200",
-              hovered && "scale-125 shadow-xl ring-1 ring-white/50",
-            )}
-            style={{
-              width: `${MARKER_PX}px`,
-              height: `${MARKER_PX}px`,
+            className="relative"
+            style={{ width: pixels, height: pixels }}
+            onMouseEnter={() => {
+              setHovered(true);
+              onHover?.(marker);
             }}
-            onMouseEnter={handlePointerEnter}
-            onMouseLeave={handlePointerLeave}
-            onClick={handleClick}
+            onMouseLeave={() => {
+              setHovered(false);
+              onHover?.(null);
+            }}
+            onClick={() => onClick?.(marker)}
           >
-            <img
-              src={marker.src}
-              alt={marker.label || "Marker"}
-              className="h-full w-full object-cover"
-              draggable={false}
-            />
+            <div
+              className={cn(
+                "h-full w-full cursor-pointer overflow-hidden rounded-full border-2 border-white/80 bg-neutral-900 shadow-lg transition-transform duration-150",
+                hovered && "scale-125 ring-2 ring-white/60",
+              )}
+            >
+              <img
+                src={marker.src}
+                alt={marker.label || "Marker"}
+                className="h-full w-full object-cover"
+                draggable={false}
+              />
+            </div>
+            {marker.label && (
+              <div
+                className={cn(
+                  "pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/85 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-white shadow transition-opacity duration-150",
+                  hovered ? "opacity-100" : "opacity-0",
+                )}
+              >
+                {marker.label}
+              </div>
+            )}
           </div>
         </Html>
       </group>
+    </group>
+  );
+}
+
+interface ClusterMarkerProps {
+  cluster: Cluster;
+  markers: GlobeMarker[];
+  radius: number;
+  size: number;
+  onClick?: (direction: THREE.Vector3, members: GlobeMarker[]) => void;
+}
+
+function ClusterMarker({ cluster, markers, radius, size, onClick }: ClusterMarkerProps) {
+  const [hovered, setHovered] = useState(false);
+  const top = useMemo(
+    () => cluster.direction.clone().multiplyScalar(radius * PIN_HEIGHT),
+    [cluster.direction, radius],
+  );
+  const preview = cluster.members.slice(0, 3).map((i) => markers[i]);
+  const box = size * 1.4;
+
+  return (
+    <group position={top}>
+      <Html center zIndexRange={[10, 0]}>
+        <div
+          className={cn("relative cursor-pointer transition-transform duration-150", hovered && "scale-110")}
+          style={{ width: box, height: box }}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onClick={() => onClick?.(cluster.direction, cluster.members.map((i) => markers[i]))}
+          title={`${cluster.members.length} places, click to zoom in`}
+        >
+          {preview.map((m, k) => (
+            <img
+              key={k}
+              src={m.src}
+              alt=""
+              draggable={false}
+              className="absolute rounded-full border-2 border-white/80 bg-neutral-900 object-cover shadow-lg"
+              style={{ width: size * 0.85, height: size * 0.85, left: k * size * 0.25, top: k * size * 0.12 }}
+            />
+          ))}
+          <div className="absolute -bottom-1 -right-1 rounded-full bg-[#ffbf00] px-1.5 py-px font-mono text-[11px] font-bold text-black shadow">
+            {cluster.members.length}
+          </div>
+          <div
+            className={cn(
+              "pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/85 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-white shadow transition-opacity duration-150",
+              hovered ? "opacity-100" : "opacity-0",
+            )}
+          >
+            {cluster.members.length} places · zoom in
+          </div>
+        </div>
+      </Html>
     </group>
   );
 }
@@ -265,6 +363,7 @@ interface RotatingGlobeProps {
   markers: GlobeMarker[];
   onMarkerClick?: (marker: GlobeMarker) => void;
   onMarkerHover?: (marker: GlobeMarker | null) => void;
+  onClusterClick?: (direction: THREE.Vector3, members: GlobeMarker[]) => void;
 }
 
 function RotatingGlobe({
@@ -272,6 +371,7 @@ function RotatingGlobe({
   markers,
   onMarkerClick,
   onMarkerHover,
+  onClusterClick,
 }: RotatingGlobeProps) {
   const groupRef = useRef<THREE.Group>(null);
 
@@ -294,7 +394,7 @@ function RotatingGlobe({
 
   // Create geometries
   const geometry = useMemo(() => {
-    return new THREE.SphereGeometry(config.radius, 64, 64);
+    return new THREE.SphereGeometry(config.radius, 96, 96);
   }, [config.radius]);
 
   const wireframeGeometry = useMemo(() => {
@@ -326,17 +426,14 @@ function RotatingGlobe({
         </mesh>
       )}
 
-      {/* Markers - now inside the rotating group */}
-      {markers.map((marker, index) => (
-        <Marker
-          key={`marker-${index}-${marker.lat}-${marker.lng}`}
-          marker={marker}
-          radius={config.radius}
-          defaultSize={config.markerSize}
-          onClick={onMarkerClick}
-          onHover={onMarkerHover}
-        />
-      ))}
+      <MarkerLayer
+        markers={markers}
+        radius={config.radius}
+        markerSize={config.markerSize}
+        onClick={onMarkerClick}
+        onHover={onMarkerHover}
+        onClusterClick={onClusterClick}
+      />
     </group>
   );
 }
@@ -411,6 +508,48 @@ interface SceneProps {
 
 function Scene({ markers, config, onMarkerClick, onMarkerHover }: SceneProps) {
   const { camera } = useThree();
+  const controls = useThree((state) => state.controls) as any;
+  const flight = useRef<{ direction: THREE.Vector3; distance: number } | null>(null);
+
+  // Clicking a cluster flies the camera over it and halves the distance until the pins separate.
+  const flyTo = useCallback(
+    (direction: THREE.Vector3) => {
+      const current = camera.position.length();
+      flight.current = {
+        direction: direction.clone(),
+        distance: Math.max(config.minDistance, current * 0.55),
+      };
+    },
+    [camera, config.minDistance],
+  );
+
+  // Any manual drag or wheel cancels an in-progress flight.
+  React.useEffect(() => {
+    if (!controls) return;
+    const cancel = () => {
+      flight.current = null;
+    };
+    controls.addEventListener("start", cancel);
+    return () => controls.removeEventListener("start", cancel);
+  }, [controls]);
+
+  useFrame(() => {
+    const f = flight.current;
+    if (f) {
+      const pos = camera.position;
+      const dist = THREE.MathUtils.lerp(pos.length(), f.distance, 0.12);
+      const dir = pos.clone().normalize().lerp(f.direction, 0.12).normalize();
+      pos.copy(dir.multiplyScalar(dist));
+      camera.lookAt(0, 0, 0);
+      if (dir.distanceTo(f.direction) < 0.002 && Math.abs(dist - f.distance) < 0.005) {
+        flight.current = null;
+      }
+    }
+    // Stop the idle spin once the viewer has zoomed in to look at something.
+    if (controls && config.autoRotateSpeed > 0) {
+      controls.autoRotate = camera.position.length() > config.radius * 2.4;
+    }
+  });
 
   // Set initial camera position (pulled back to accommodate markers)
   React.useEffect(() => {
@@ -439,6 +578,7 @@ function Scene({ markers, config, onMarkerClick, onMarkerHover }: SceneProps) {
         markers={markers}
         onMarkerClick={onMarkerClick}
         onMarkerHover={onMarkerHover}
+        onClusterClick={flyTo}
       />
 
       {/* Atmosphere (static) */}
@@ -504,7 +644,7 @@ const defaultConfig: Required<Globe3DConfig> = {
   minDistance: 5,
   maxDistance: 15,
   initialRotation: { x: 0, y: 0 },
-  markerSize: 0.06,
+  markerSize: 40,
   showWireframe: false,
   wireframeColor: "#4a9eff",
   ambientIntensity: 0.6,

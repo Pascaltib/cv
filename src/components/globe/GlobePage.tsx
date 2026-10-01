@@ -50,9 +50,9 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
       pointLightIntensity: 2.2,
       autoRotateSpeed: 0.35,
       enableZoom: true,
-      minDistance: 4,
+      minDistance: 2.35,
       maxDistance: 12,
-      markerSize: lite ? 0.12 : 0.14,
+      markerSize: lite ? 34 : 40,
       initialRotation: { x: 0.2, y: -0.4 },
     }),
     [lite]
@@ -83,14 +83,14 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
         />
 
         {!selected && (
-          <p className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 text-center font-mono text-xs uppercase tracking-[0.25em] text-white/60">
-            drag to spin · tap a flag for the story
+          <p className="pointer-events-none absolute bottom-6 left-1/2 z-20 -translate-x-1/2 text-center font-mono text-xs uppercase tracking-[0.25em] text-white/60">
+            drag to spin · scroll to zoom · tap a flag for the story
           </p>
         )}
 
         {/* story panel: side sheet on desktop, bottom sheet on phones */}
         {selected && (
-          <aside className="absolute inset-x-0 bottom-0 z-[60] max-h-[70%] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#0b0618]/95 p-6 shadow-[0_-20px_60px_rgba(0,0,0,0.6)] md:inset-y-6 md:left-auto md:right-6 md:max-h-none md:w-[380px] md:rounded-3xl md:border">
+          <aside className="absolute inset-x-0 bottom-0 z-20 z-[60] max-h-[70%] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#0b0618]/95 p-6 shadow-[0_-20px_60px_rgba(0,0,0,0.6)] md:inset-y-6 md:left-auto md:right-6 md:max-h-none md:w-[380px] md:rounded-3xl md:border">
             <button
               onClick={() => setSelected(null)}
               aria-label="Close story"
