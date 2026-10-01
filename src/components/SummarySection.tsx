@@ -64,17 +64,17 @@ export function SummarySection() {
           <HighlightCard
             icon={<Brain className="w-6 h-6" />}
             title="AI & LLMs"
-            description="Tool calling, routing across Claude, GPT and Gemini, an MCP server, and tracking what each request costs"
+            description="Agentic systems, model routing through gateways and BYOK, building and consuming MCP servers, multi-stage LLM pipelines, evals, and usage metering for individuals and teams"
           />
           <HighlightCard
             icon={<Code className="w-6 h-6" />}
             title="Full stack"
-            description="Sole developer of Navar and KnowThyself360°. Frontend, API, database, and billing"
+            description="End to end, as the only engineer on two products: data modeling, auth, billing and webhooks, background jobs, email, admin tooling, and the frontend"
           />
           <HighlightCard
             icon={<Lightbulb className="w-6 h-6" />}
             title="Startup"
-            description="CTO at Audemic. These days I also run demos, onboarding, and investor updates"
+            description="Former CTO. Comfortable owning pricing, sales demos, onboarding, marketing, and investor updates alongside the engineering"
           />
         </div>
 
