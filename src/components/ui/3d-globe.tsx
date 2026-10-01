@@ -206,7 +206,7 @@ function MarkerLayer({ markers, radius, markerSize, onClick, onHover, onClusterC
       {/* Every place keeps a dot on the surface, even while folded into a cluster */}
       {points.map((p, i) => (
         <mesh key={`dot-${i}`} position={p.surface}>
-          <sphereGeometry args={[radius * 0.006, 8, 8]} />
+          <sphereGeometry args={[radius * 0.0015, 8, 8]} />
           <meshBasicMaterial color="#ef4444" />
         </mesh>
       ))}
