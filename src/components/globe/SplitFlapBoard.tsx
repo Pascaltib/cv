@@ -72,6 +72,7 @@ function FlapWord({ text, width, offset }: { text: string; width: number; offset
 export function SplitFlapBoard({ onBoard }: { onBoard: () => void }) {
   const [page, setPage] = useState(0);
   const pages = Math.max(1, Math.ceil(places.length / ROWS));
+  const countries = useMemo(() => new Set(places.map((p) => p.countryCode)).size, []);
 
   useEffect(() => {
     if (pages <= 1) return;
@@ -92,7 +93,7 @@ export function SplitFlapBoard({ onBoard }: { onBoard: () => void }) {
           <h2 className="text-glow mb-4 text-3xl text-white md:text-4xl">Departures</h2>
           <div className="mx-auto h-1 w-16 rounded-full bg-white" />
           <p className="text-glow mt-4 text-white/85">
-            Six countries, three continents, one passport full of stamps.
+            {countries} countries, {places.length} places, one passport full of stamps.
           </p>
         </div>
 

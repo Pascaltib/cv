@@ -25,3 +25,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+
+# Personal data, never commit
+Timeline.json
