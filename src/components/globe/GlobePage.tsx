@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { X, MapPin } from 'lucide-react';
+import { X, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Globe3D, type GlobeMarker } from '@/components/ui/3d-globe';
-import { places, kindLabel, type Place } from '@/data/places';
+import { places, kindLabel, type Place, type PlaceImage } from '@/data/places';
 import { useLiteMode } from '@/hooks/use-media-query';
 
 // Full-screen globe. Loaded lazily from App so Three.js only ships when someone boards.
@@ -11,6 +11,8 @@ const flagFor = (code: string) => `https://flagcdn.com/w640/${code.toLowerCase()
 export default function GlobePage({ onClose }: { onClose: () => void }) {
   const lite = useLiteMode();
   const [selected, setSelected] = useState<Place | null>(null);
+  // Index into selected.images for the full-screen viewer
+  const [lightbox, setLightbox] = useState<number | null>(null);
 
   const markers = useMemo<(GlobeMarker & { place: Place })[]>(
     () =>
@@ -25,8 +27,17 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
   );
 
   useEffect(() => {
+    const images = selected?.images ?? [];
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') (selected ? setSelected(null) : onClose());
+      if (e.key === 'Escape') {
+        if (lightbox !== null) setLightbox(null);
+        else if (selected) setSelected(null);
+        else onClose();
+      }
+      if (lightbox !== null && images.length > 1) {
+        if (e.key === 'ArrowRight') setLightbox((lightbox + 1) % images.length);
+        if (e.key === 'ArrowLeft') setLightbox((lightbox - 1 + images.length) % images.length);
+      }
     };
     window.addEventListener('keydown', onKey);
     const previousOverflow = document.body.style.overflow;
@@ -35,7 +46,7 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = previousOverflow;
     };
-  }, [onClose, selected]);
+  }, [onClose, selected, lightbox]);
 
   const config = useMemo(
     () => ({
@@ -79,7 +90,10 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
           className="h-full w-full"
           markers={markers}
           config={config}
-          onMarkerClick={(marker) => setSelected((marker as GlobeMarker & { place: Place }).place)}
+          onMarkerClick={(marker) => {
+            setLightbox(null);
+            setSelected((marker as GlobeMarker & { place: Place }).place);
+          }}
         />
 
         {!selected && (
@@ -92,7 +106,10 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
         {selected && (
           <aside className="absolute inset-x-0 bottom-0 z-20 z-[60] max-h-[70%] overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#0b0618]/95 p-6 shadow-[0_-20px_60px_rgba(0,0,0,0.6)] md:inset-y-6 md:left-auto md:right-6 md:max-h-none md:w-[380px] md:rounded-3xl md:border">
             <button
-              onClick={() => setSelected(null)}
+              onClick={() => {
+                setLightbox(null);
+                setSelected(null);
+              }}
               aria-label="Close story"
               className="absolute right-4 top-4 text-white/50 hover:text-white"
             >
@@ -125,8 +142,12 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
             </p>
             {selected.images && selected.images.length > 0 && (
               <div className="mt-5 grid grid-cols-2 gap-2">
-                {selected.images.map((image) => (
-                  <figure key={image.src} className="group relative overflow-hidden rounded-xl">
+                {selected.images.map((image, index) => (
+                  <figure
+                    key={image.src}
+                    className="group relative cursor-zoom-in overflow-hidden rounded-xl"
+                    onClick={() => setLightbox(index)}
+                  >
                     <img
                       src={image.src}
                       alt={image.caption ?? ''}
@@ -143,6 +164,73 @@ export default function GlobePage({ onClose }: { onClose: () => void }) {
               </div>
             )}
           </aside>
+        )}
+
+        {/* full-screen image viewer */}
+        {selected?.images && lightbox !== null && selected.images[lightbox] && (
+          <Lightbox
+            images={selected.images}
+            index={lightbox}
+            onChange={setLightbox}
+            onClose={() => setLightbox(null)}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Lightbox({
+  images,
+  index,
+  onChange,
+  onClose,
+}: {
+  images: PlaceImage[];
+  index: number;
+  onChange: (index: number) => void;
+  onClose: () => void;
+}) {
+  const image = images[index];
+  const many = images.length > 1;
+  const step = (delta: number) => onChange((index + delta + images.length) % images.length);
+
+  return (
+    <div
+      className="absolute inset-0 z-[70] flex flex-col items-center justify-center bg-black/90 p-4 md:p-10"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        aria-label="Close image"
+        className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white/80 hover:bg-white hover:text-black"
+      >
+        <X className="h-5 w-5" />
+      </button>
+      <img
+        src={image.src}
+        alt={image.caption ?? ''}
+        className="max-h-[80vh] max-w-full rounded-lg object-contain shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      />
+      <div className="mt-4 flex max-w-2xl items-center gap-4 text-center" onClick={(e) => e.stopPropagation()}>
+        {many && (
+          <button onClick={() => step(-1)} aria-label="Previous image" className="rounded-full border border-white/20 p-2 text-white/80 hover:bg-white hover:text-black">
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+        )}
+        <div>
+          {image.caption && <p className="text-sm text-white/90">{image.caption}</p>}
+          {many && (
+            <p className="mt-1 font-mono text-[11px] uppercase tracking-widest text-white/50">
+              {index + 1} / {images.length}
+            </p>
+          )}
+        </div>
+        {many && (
+          <button onClick={() => step(1)} aria-label="Next image" className="rounded-full border border-white/20 p-2 text-white/80 hover:bg-white hover:text-black">
+            <ChevronRight className="h-5 w-5" />
+          </button>
         )}
       </div>
     </div>

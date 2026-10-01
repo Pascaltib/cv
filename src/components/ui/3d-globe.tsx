@@ -117,7 +117,8 @@ interface MarkerLayerProps {
   markerSize: number;
   onClick?: (marker: GlobeMarker) => void;
   onHover?: (marker: GlobeMarker | null) => void;
-  onClusterClick?: (direction: THREE.Vector3, members: GlobeMarker[]) => void;
+  /** Returns true if the camera flew closer, false if it is already at the closest zoom */
+  onClusterClick?: (direction: THREE.Vector3, members: GlobeMarker[]) => boolean;
 }
 
 interface MarkerPoint {
@@ -228,6 +229,7 @@ function MarkerLayer({ markers, radius, markerSize, onClick, onHover, onClusterC
             radius={radius}
             size={markerSize}
             onClick={onClusterClick}
+            onSelect={onClick}
           />
         ),
       )}
@@ -304,11 +306,14 @@ interface ClusterMarkerProps {
   markers: GlobeMarker[];
   radius: number;
   size: number;
-  onClick?: (direction: THREE.Vector3, members: GlobeMarker[]) => void;
+  onClick?: (direction: THREE.Vector3, members: GlobeMarker[]) => boolean;
+  onSelect?: (marker: GlobeMarker) => void;
 }
 
-function ClusterMarker({ cluster, markers, radius, size, onClick }: ClusterMarkerProps) {
+function ClusterMarker({ cluster, markers, radius, size, onClick, onSelect }: ClusterMarkerProps) {
   const [hovered, setHovered] = useState(false);
+  // When the camera can't get any closer, the cluster opens as a list of its places instead
+  const [expanded, setExpanded] = useState(false);
   const top = useMemo(
     () => cluster.direction.clone().multiplyScalar(radius * PIN_HEIGHT),
     [cluster.direction, radius],
@@ -324,7 +329,14 @@ function ClusterMarker({ cluster, markers, radius, size, onClick }: ClusterMarke
           style={{ width: box, height: box }}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
-          onClick={() => onClick?.(cluster.direction, cluster.members.map((i) => markers[i]))}
+          onClick={() => {
+            if (expanded) {
+              setExpanded(false);
+              return;
+            }
+            const flew = onClick?.(cluster.direction, cluster.members.map((i) => markers[i]));
+            if (!flew) setExpanded(true);
+          }}
           title={`${cluster.members.length} places, click to zoom in`}
         >
           {preview.map((m, k) => (
@@ -343,12 +355,37 @@ function ClusterMarker({ cluster, markers, radius, size, onClick }: ClusterMarke
           <div
             className={cn(
               "pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/85 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-white shadow transition-opacity duration-150",
-              hovered ? "opacity-100" : "opacity-0",
+              hovered && !expanded ? "opacity-100" : "opacity-0",
             )}
           >
             {cluster.members.length} places · zoom in
           </div>
         </div>
+        {expanded && (
+          <ul
+            className="absolute left-1/2 top-full mt-2 min-w-[180px] -translate-x-1/2 overflow-hidden rounded-xl border border-white/15 bg-black/90 py-1 shadow-xl backdrop-blur"
+            onMouseEnter={() => setHovered(false)}
+          >
+            {cluster.members.map((i) => {
+              const m = markers[i];
+              return (
+                <li key={i}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExpanded(false);
+                      onSelect?.(m);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left font-mono text-xs uppercase tracking-wider text-white hover:bg-white/10"
+                  >
+                    <img src={m.src} alt="" className="h-5 w-5 rounded-full border border-white/60 object-cover" draggable={false} />
+                    <span className="whitespace-nowrap">{m.label}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </Html>
     </group>
   );
@@ -515,10 +552,12 @@ function Scene({ markers, config, onMarkerClick, onMarkerHover }: SceneProps) {
   const flyTo = useCallback(
     (direction: THREE.Vector3) => {
       const current = camera.position.length();
-      flight.current = {
-        direction: direction.clone(),
-        distance: Math.max(config.minDistance, current * 0.55),
-      };
+      const distance = Math.max(config.minDistance, current * 0.55);
+      // Already as close as allowed and looking at the spot: nothing to fly to
+      const facing = camera.position.clone().normalize().dot(direction) > 0.995;
+      if (current - config.minDistance < 0.05 && facing) return false;
+      flight.current = { direction: direction.clone(), distance };
+      return true;
     },
     [camera, config.minDistance],
   );
